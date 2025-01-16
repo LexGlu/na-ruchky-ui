@@ -3,7 +3,6 @@
 import Link from "next/link";
 import HeaderActions from "./header-actions";
 
-// Interface for nav links
 export interface NavLink {
   label: string;
   href: string;
