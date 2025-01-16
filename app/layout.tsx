@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import Header from "@/components/header/header";
+import Footer from "@/components/footer/footer";
 
 import { geologica } from "@/components/ui/fonts";
 
@@ -25,6 +26,7 @@ export default function RootLayout({
       >
         <Header />
         {children}
+        <Footer />
       </body>
     </html>
   );
