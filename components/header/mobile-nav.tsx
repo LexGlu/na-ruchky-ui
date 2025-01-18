@@ -1,20 +1,25 @@
 "use client";
 
+import React, { PropsWithChildren } from "react";
 import Link from "next/link";
-import HeaderActions from "./header-actions";
-import { NavLink } from "./header-desktop-nav";
+import { NavLink } from "@/components/header/data";
 
-interface HeaderMobileNavProps {
+interface MobileNavProps extends PropsWithChildren {
   navLinks: NavLink[];
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function HeaderMobileNav({
+/**
+ * Renders mobile nav, toggled by hamburger.
+ * We pass children to show user actions (login/logout) in the mobile panel as well.
+ */
+export default function MobileNav({
   navLinks,
   isOpen,
   onClose,
-}: HeaderMobileNavProps) {
+  children,
+}: MobileNavProps) {
   return (
     <div
       className={`
@@ -24,7 +29,6 @@ export default function HeaderMobileNav({
         overflow-hidden
       `}
       role="navigation"
-      id="mobile-menu"
     >
       {/* Nav Links */}
       <div className="px-4 pt-2 pb-3 space-y-1">
@@ -34,24 +38,15 @@ export default function HeaderMobileNav({
             href={link.href}
             onClick={onClose}
             className="block text-black hover:text-gray-700 px-3 py-2 rounded-md"
-            aria-label={link.label}
           >
             {link.label}
           </Link>
         ))}
       </div>
 
-      {/* CTA + Actions */}
+      {/* Action Buttons or Children */}
       <div className="flex px-4 py-2 gap-2 justify-between">
-        <Link
-          href="/"
-          onClick={onClose}
-          className="block bg-[#CAF97C] hover:bg-lime-400 text-black font-semibold px-3 py-2 rounded-2xl"
-          aria-label="Add announcement"
-        >
-          Додати оголошення
-        </Link>
-        <HeaderActions />
+        {children}
       </div>
     </div>
   );

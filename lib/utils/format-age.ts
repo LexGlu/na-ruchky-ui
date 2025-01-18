@@ -65,7 +65,7 @@ export default function formatAge(birthDate: string | null): string {
   const years = Math.floor(totalMonths / 12);
   const remainder = totalMonths % 12;
   // If remainder >= 6 => .5
-  let finalValue = years + (remainder >= 6 ? 0.5 : 0);
+  const finalValue = years + (remainder >= 6 ? 0.5 : 0);
 
   return formatDecimalUkrYears(finalValue);
 }
