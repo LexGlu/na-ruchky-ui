@@ -3,14 +3,13 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import paw from "@/public/paw-dark.svg";
-import { useAuth } from "@/context/auth-context";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { AuthState } from "@/store/auth-store";
 
-export default function HeaderActions() {
-  const { user, logout } = useAuth();
+export default function HeaderActions(authState: AuthState) {
   const [showAuth, setShowAuth] = useState(false);
 
-  if (!user) {
+  if (!authState.user) {
     // Not logged in => show single “Увійти” button + paw button
     return (
       <div className="flex items-center">
@@ -38,11 +37,11 @@ export default function HeaderActions() {
   return (
     <div className="flex items-center gap-3">
       <p className="font-semibold text-black">
-        {user.first_name || user.email}
+        {authState.user.first_name || authState.user.email}
       </p>
       <div className="flex">
         <button
-          onClick={() => logout()}
+          onClick={() => authState.logout()}
           className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[20px] rounded-2xl"
         >
           Вийти

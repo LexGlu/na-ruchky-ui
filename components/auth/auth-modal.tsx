@@ -5,7 +5,7 @@ import ReactDOM from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/store/auth-store";
 import { registerUser } from "@/lib/api/auth";
 
 import { FormField } from "@/components/ui/form-fields";

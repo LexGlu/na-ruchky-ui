@@ -11,11 +11,15 @@ import MobileNav from "@/components/header/mobile-nav";
 import HeaderActions from "@/components/header/actions";
 import { navLinks } from "@/components/header/data";
 
+import { useAuth } from "@/store/auth-store";
+
 /**
  * The main Header component used in layout.tsx
  */
 export default function Header() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const authState = useAuth();
 
   const toggleMobileNav = () => setIsMobileOpen((prev) => !prev);
   const closeMobileNav = () => setIsMobileOpen(false);
@@ -42,7 +46,7 @@ export default function Header() {
                 Додати оголошення
               </Link>
 
-              <HeaderActions />
+              <HeaderActions {...authState} />
             </div>
           </DesktopNav>
 
@@ -65,7 +69,7 @@ export default function Header() {
         onClose={closeMobileNav}
       >
         {/* The right side actions for mobile */}
-        <HeaderActions />
+        <HeaderActions {...authState} />
       </MobileNav>
     </header>
   );
