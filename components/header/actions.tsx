@@ -6,6 +6,8 @@ import paw from "@/public/paw-dark.svg";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { AuthState } from "@/store/auth-store";
 
+import LogOutModal from "@/components/modals/logout";
+
 export default function HeaderActions(authState: AuthState) {
   const [showAuth, setShowAuth] = useState(false);
 
@@ -40,12 +42,7 @@ export default function HeaderActions(authState: AuthState) {
         {authState.user.first_name || authState.user.email}
       </p>
       <div className="flex">
-        <button
-          onClick={() => authState.logout()}
-          className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[20px] rounded-2xl"
-        >
-          Вийти
-        </button>
+        <LogOutModal />
         <button
           type="button"
           className="flex bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[15px] justify-center items-center rounded-3xl"

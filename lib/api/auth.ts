@@ -1,4 +1,3 @@
-// ruchky/lib/api/auth.ts
 import { safeFetch, BASE_API_URL } from './request';
 import { User } from "@/lib/types/user";
 

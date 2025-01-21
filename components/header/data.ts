@@ -1,4 +1,3 @@
-// This file can store constants or types for your navigation
 export interface NavLink {
     label: string;
     href: string;
