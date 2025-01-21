@@ -11,9 +11,7 @@ import {
 } from "@heroui/modal";
 import { useAuth } from "@/store/auth-store";
 
-interface LogOutModalProps {}
-
-const LogOutModal: React.FC<LogOutModalProps> = () => {
+export default function LogOutModal() {
   const { logout, isLogoutModalOpen, setLogOutModalOpen } = useAuth();
 
   const onClose = () => {
@@ -31,8 +29,8 @@ const LogOutModal: React.FC<LogOutModalProps> = () => {
     try {
       await logout();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Logout failed.");
+    } catch (err: unknown) {
+      setError("Logout failed.");
       console.error("Logout failed:", err);
     } finally {
       setIsProcessing(false);
@@ -89,5 +87,3 @@ const LogOutModal: React.FC<LogOutModalProps> = () => {
     </>
   );
 };
-
-export default LogOutModal;

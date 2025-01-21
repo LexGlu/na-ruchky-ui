@@ -65,8 +65,9 @@ class AuthService {
       return await safeFetch<User>(`${BASE_API_URL}/api/v1/users/me`, {
         method: 'GET',
       });
-    } catch (err: any) {
-      if (err.status === 401) {
+    } catch (err: unknown) {
+      const error = err as { status: number };
+      if (error.status === 401) {
         return null;
       }
       throw err;

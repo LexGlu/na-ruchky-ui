@@ -13,6 +13,7 @@ export default function NotFound() {
             alt="Na.ruchky"
             className="rounded-[20px] shadow-lg"
             priority
+            unoptimized={true}
         />
         <p className="text-lg text-gray-700 text-center max-w-md">
           На жаль, ми не змогли знайти запитаний ресурс.

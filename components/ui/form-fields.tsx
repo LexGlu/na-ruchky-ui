@@ -19,7 +19,7 @@ export function FormField({ label, id, error, ...props }: FormFieldProps) {
       </label>
       <input
         id={id}
-        className={`border px-3 py-2 rounded-[10px] focus:outline-none ${
+        className={`border px-3 py-2 rounded-[10px] focus:outline-none focus:ring-0 focus:border-2 focus:border-[#CAF97C] ${
           error ? "border-red-500" : ""
         }`}
         {...props}

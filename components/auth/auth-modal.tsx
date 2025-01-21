@@ -28,10 +28,10 @@ const modalVariants = {
 export default function AuthModal() {
   const { login, isAuthModalOpen, setAuthModalOpen } = useAuth();
 
-  const onClose = () => {
+  const onClose = useCallback(() => {
     // Close the modal
     setAuthModalOpen(false);
-  };
+  }, [setAuthModalOpen]);
 
   // Tabs
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -143,8 +143,9 @@ export default function AuthModal() {
         });
         // Switch to login on success
         setActiveTab("login");
-      } catch (err: any) {
-        setRegisterError(err.info?.message || "Помилка при реєстрації");
+      } catch (err: unknown) {
+        const error = err as { info?: { message: string } };
+        setRegisterError(error.info?.message || "Помилка при реєстрації");
       } finally {
         setIsLoading((prev) => ({ ...prev, register: false }));
       }
