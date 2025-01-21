@@ -5,6 +5,9 @@ import Header from "@/components/header";
 import Footer from "@/components/footer/footer";
 import { geologica } from "@/components/ui/fonts";
 
+import AuthModal from "@/components/auth/auth-modal";
+import LogOutModal from "@/components/modals/logout";
+
 export const metadata: Metadata = {
   title: {
     template: "%s | Na.Ruchky",
@@ -24,6 +27,8 @@ export default function RootLayout({
           <Header/>
           {children}
           <Footer />
+          <AuthModal />
+          <LogOutModal />
       </body>
     </html>
   );

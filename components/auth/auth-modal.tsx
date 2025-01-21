@@ -6,17 +6,12 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
 import { useAuth } from "@/store/auth-store";
-import { registerUser } from "@/lib/api/auth";
+import { authService } from "@/lib/api/auth";
 
 import { FormField } from "@/components/ui/form-fields";
 import { Spinner } from "@/components/ui/spinner";
 
 import cross from "@/public/cross.svg";
-
-interface AuthModalProps {
-  open: boolean;
-  onClose: () => void;
-}
 
 // Animation variants
 const overlayVariants = {
@@ -30,8 +25,13 @@ const modalVariants = {
   exit: { opacity: 0, y: "50px", scale: 0.95 },
 };
 
-export function AuthModal({ open, onClose }: AuthModalProps) {
-  const { login } = useAuth();
+export default function AuthModal() {
+  const { login, isAuthModalOpen, setAuthModalOpen } = useAuth();
+
+  const onClose = () => {
+    // Close the modal
+    setAuthModalOpen(false);
+  };
 
   // Tabs
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -60,13 +60,13 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (open) {
+    if (isAuthModalOpen) {
       document.body.classList.add("overflow-hidden");
     } else {
       document.body.classList.remove("overflow-hidden");
     }
     return () => document.body.classList.remove("overflow-hidden");
-  }, [open]);
+  }, [isAuthModalOpen]);
 
   // Close modal on 'Escape'
   const handleEscClose = useCallback(
@@ -79,13 +79,13 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   );
 
   useEffect(() => {
-    if (open) {
+    if (isAuthModalOpen) {
       document.addEventListener("keydown", handleEscClose);
     } else {
       document.removeEventListener("keydown", handleEscClose);
     }
     return () => document.removeEventListener("keydown", handleEscClose);
-  }, [open, handleEscClose]);
+  }, [isAuthModalOpen, handleEscClose]);
 
   // Close on outside click
   const handleOutsideClick = useCallback(
@@ -135,7 +135,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       setRegisterError("");
       setIsLoading((prev) => ({ ...prev, register: true }));
       try {
-        await registerUser({
+        await authService.registerUser({
           email: registerData.email,
           password: registerData.password,
           firstName: registerData.firstName,
@@ -228,7 +228,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
   // If not open, don't render anything
   const modalContent = (
     <AnimatePresence>
-      {open && (
+      {isAuthModalOpen && (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm text-black"
           onClick={handleOutsideClick}
@@ -256,7 +256,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                     onClick={onClose}
                     className="flex items-center justify-center p-3 bg-white rounded-full"
                   >
-                    <Image src={cross} alt="cross" />
+                    <Image src={cross} alt="Close" />
                   </button>
                 </div>
               </div>

@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from "react";
 import {
   Modal,
@@ -5,15 +7,21 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  useDisclosure,
+
 } from "@heroui/modal";
 import { useAuth } from "@/store/auth-store";
 
 interface LogOutModalProps {}
 
 const LogOutModal: React.FC<LogOutModalProps> = () => {
-  const { logout } = useAuth();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { logout, isLogoutModalOpen, setLogOutModalOpen } = useAuth();
+
+  const onClose = () => {
+    // Close the modal
+    setLogOutModalOpen(false);
+  };
+
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,14 +41,8 @@ const LogOutModal: React.FC<LogOutModalProps> = () => {
 
   return (
     <>
-      <button
-        onClick={onOpen}
-        className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[20px] rounded-2xl"
-      >
-        Вийти
-      </button>
       <Modal
-        isOpen={isOpen}
+        isOpen={isLogoutModalOpen}
         onOpenChange={onClose}
         shadow="lg"
         className="shadow-lg bg-white p-6 rounded-[20px] text-black"

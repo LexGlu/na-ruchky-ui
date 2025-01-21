@@ -3,21 +3,30 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import paw from "@/public/paw-dark.svg";
-import { AuthModal } from "@/components/auth/auth-modal";
-import { AuthState } from "@/store/auth-store";
 
-import LogOutModal from "@/components/modals/logout";
+import { useAuth } from "@/store/auth-store";
 
-export default function HeaderActions(authState: AuthState) {
-  const [showAuth, setShowAuth] = useState(false);
+export default function HeaderActions() {
+  const { user, setLogOutModalOpen, setAuthModalOpen } = useAuth();
 
-  if (!authState.user) {
+
+  const handleLogOutBtnClick = () => {
+    // Open the logout modal
+    setLogOutModalOpen(true);
+  };
+
+  const handleAuthBtnClick = () => {
+    // Open the auth modal
+    setAuthModalOpen(true);
+  }
+
+  if (!user) {
     // Not logged in => show single “Увійти” button + paw button
     return (
       <div className="flex items-center">
         <button
           type="button"
-          onClick={() => setShowAuth(true)}
+          onClick={handleAuthBtnClick}
           className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[26px] rounded-2xl"
         >
           Увійти
@@ -28,9 +37,6 @@ export default function HeaderActions(authState: AuthState) {
         >
           <Image src={paw} alt="paw icon" />
         </button>
-
-        {/* Single AuthModal with tabs (login & register) */}
-        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
       </div>
     );
   }
@@ -39,10 +45,15 @@ export default function HeaderActions(authState: AuthState) {
   return (
     <div className="flex items-center gap-3">
       <p className="font-semibold text-black">
-        {authState.user.first_name || authState.user.email}
+        {user.first_name || user.email}
       </p>
       <div className="flex">
-        <LogOutModal />
+        <button
+          onClick={handleLogOutBtnClick}
+          className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[20px] rounded-2xl"
+        >
+          Вийти
+        </button>
         <button
           type="button"
           className="flex bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[15px] justify-center items-center rounded-3xl"
