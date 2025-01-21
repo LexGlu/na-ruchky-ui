@@ -261,24 +261,30 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleTabSwitch("login")}
-                className={`px-4 mt-2py-2 text-xl text-black leading-5 rounded-t-3xl bg-white ${
-                  activeTab === "login" ? "opacity-100" : "opacity-80"
-                }`}
-              >
-                Авторизація
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabSwitch("register")}
-                className={`px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white  ${
-                  activeTab === "register" ? "opacity-100" : "opacity-80"
-                }`}
-              >
-                Реєстрація
-              </button>
+              <div className="flex gap-7">
+                <div className="relative flex">
+                  <button
+                    type="button"
+                    onClick={() => handleTabSwitch("login")}
+                    className={`auth-tab px-4 mt-2py-2 text-xl text-black leading-5 rounded-t-3xl bg-white ${
+                      activeTab === "login" ? "opacity-100" : "opacity-80"
+                    }`}
+                  >
+                    Авторизація
+                  </button>
+                </div>
+                <div className="relative flex">
+                  <button
+                    type="button"
+                    onClick={() => handleTabSwitch("register")}
+                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white  ${
+                      activeTab === "register" ? "opacity-100" : "opacity-80"
+                    }`}
+                  >
+                    Реєстрація
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Modal Body */}
