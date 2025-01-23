@@ -23,29 +23,31 @@ body {
 .auth-tab::before {
   content: "";
   position: absolute;
-  bottom: 5px;
+  bottom: 7.5px;
   left: -27px;
   width: 35px;
   height: 20px;
   background: transparent;
   border-top-right-radius: 20px;
-  box-shadow: 4px -6px #fff;
+  box-shadow: 17px -1px 0px 0px white;
   rotate: 90deg;
   border: none;
+  overflow: hidden;
 }
 
 .auth-tab::after {
   content: "";
   position: absolute;
-  bottom: 5px;
+  bottom: 7.5px;
   right: -27px;
   width: 35px;
   height: 20px;
   background: transparent;
   border-top-left-radius: 20px;
-  box-shadow: -4px -8px #fff;
+  box-shadow: -17px -1px 0px 0px white;
   rotate: 270deg;
   border: none;
+  overflow: hidden;
 }
 
 .modal-open::before {

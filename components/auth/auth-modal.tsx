@@ -262,7 +262,7 @@ export default function AuthModal() {
                 </div>
               </div>
 
-              <div className="flex gap-7">
+              <div className="flex gap-10">
                 <div className="relative flex">
                   <button
                     type="button"
