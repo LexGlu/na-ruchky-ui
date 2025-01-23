@@ -14,7 +14,5 @@ export default {
       },
     },
   },
-  plugins: [
-    require('flyonui'),
-  ],
+  plugins: [],
 } satisfies Config;

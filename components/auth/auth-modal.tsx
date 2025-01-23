@@ -9,7 +9,7 @@ import { useAuth } from "@/store/auth-store";
 import { authService } from "@/lib/api/auth";
 
 import { FormField } from "@/components/ui/form-fields";
-import { Spinner } from "@/components/ui/spinner";
+import { PuffLoader } from "react-spinners"; 
 
 import cross from "@/public/cross.svg";
 
@@ -324,7 +324,7 @@ export default function AuthModal() {
                 >
                   {formConfigs[activeTab].isLoading ? (
                     <div className="flex gap-2 items-center">
-                      <Spinner />
+                      <PuffLoader size={20} />
                       {formConfigs[activeTab].button.loadingText}
                     </div>
                   ) : (
