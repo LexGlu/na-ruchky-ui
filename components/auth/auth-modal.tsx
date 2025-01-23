@@ -251,11 +251,11 @@ export default function AuthModal() {
           >
             {/* Tab Headers & Close Button */}
             <div className="flex gap-2">
-              <div className="flex pb-1 pr-1">
-                <div className="flex rounded-br-[20px] z-1">
+              <div className="flex">
+                <div className="flex pb-1 rounded-br-[20px] z-1">
                   <button
                     onClick={onClose}
-                    className="flex items-center justify-center p-3 bg-white rounded-full"
+                    className="flex items-center justify-center p-3 bg-white rounded-full cursor-pointer"
                   >
                     <Image src={cross} alt="Close" />
                   </button>
@@ -267,7 +267,7 @@ export default function AuthModal() {
                   <button
                     type="button"
                     onClick={() => handleTabSwitch("login")}
-                    className={`auth-tab px-4 mt-2py-2 text-xl text-black leading-5 rounded-t-3xl bg-white ${
+                    className={`auth-tab px-4 mt-2py-2 text-xl text-black leading-5 rounded-t-3xl bg-white cursor-pointer ${
                       activeTab === "login" ? "opacity-100" : "opacity-80"
                     }`}
                   >
@@ -278,7 +278,7 @@ export default function AuthModal() {
                   <button
                     type="button"
                     onClick={() => handleTabSwitch("register")}
-                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white  ${
+                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white cursor-pointer ${
                       activeTab === "register" ? "opacity-100" : "opacity-80"
                     }`}
                   >
@@ -320,7 +320,7 @@ export default function AuthModal() {
                 <button
                   type="submit"
                   disabled={formConfigs[activeTab].isLoading}
-                  className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-2 px-4 rounded-2xl flex items-center justify-center disabled:opacity-50"
+                  className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-2 px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer"
                 >
                   {formConfigs[activeTab].isLoading ? (
                     <div className="flex gap-2 items-center">
