@@ -9,7 +9,7 @@ interface DesktopNavProps extends PropsWithChildren {
 }
 
 /**
- * Renders desktop navigation. 
+ * Renders desktop navigation.
  * Receives navLinks array + optional "children" for the right side (e.g. actions).
  */
 export default function DesktopNav({ navLinks, children }: DesktopNavProps) {
@@ -25,9 +25,7 @@ export default function DesktopNav({ navLinks, children }: DesktopNavProps) {
         </Link>
       ))}
       {/* Render any extra actions (login, register, etc.) on the right */}
-      <div className="flex gap-[6px]">
-        {children}
-      </div>
+      <div className="flex gap-[6px]">{children}</div>
     </nav>
   );
 }

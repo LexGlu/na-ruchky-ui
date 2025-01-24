@@ -11,10 +11,7 @@ interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function FormField({ label, id, error, ...props }: FormFieldProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label
-        htmlFor={id}
-        className="font-light px-4 text-black"
-      >
+      <label htmlFor={id} className="font-light px-4 text-black">
         {label}
       </label>
       <input
@@ -24,9 +21,7 @@ export function FormField({ label, id, error, ...props }: FormFieldProps) {
         }`}
         {...props}
       />
-      {error && (
-        <p className="text-red-600 text-sm px-4">{error}</p>
-      )}
+      {error && <p className="text-red-600 text-sm px-4">{error}</p>}
     </div>
   );
 }

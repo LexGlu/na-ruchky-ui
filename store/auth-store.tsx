@@ -1,11 +1,11 @@
 "use client";
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+// TODO: Fix type errors or replace zustand with another state management library. This is a temporary workaround.
+
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "@/lib/types/user";
-import {
-  authService,
-} from "@/lib/api/auth";
+import { authService } from "@/lib/api/auth";
 
 export interface AuthState {
   user: User | null;
@@ -43,24 +43,13 @@ export const useAuthStore = create<AuthState>()(
         const user = await authService.fetchCurrentUser();
         set({ user });
       },
-      setLogOutModalOpen: (isLogoutModalOpen: boolean) => set({ isLogoutModalOpen }),
+      setLogOutModalOpen: (isLogoutModalOpen: boolean) =>
+        set({ isLogoutModalOpen }),
       setAuthModalOpen: (isAuthModalOpen: boolean) => set({ isAuthModalOpen }),
     }),
     {
-      name: 'auth-storage',
-      storage: typeof window !== 'undefined'
-        ? {
-            getItem: (name) => {
-              const str = localStorage.getItem(name);
-              if (!str) return null;
-              return JSON.parse(str);
-            },
-            setItem: (name, value) => {
-              localStorage.setItem(name, JSON.stringify(value));
-            },
-            removeItem: (name) => localStorage.removeItem(name),
-          }
-        : undefined,
+      name: "auth-storage",
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

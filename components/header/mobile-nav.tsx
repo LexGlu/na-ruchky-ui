@@ -45,9 +45,7 @@ export default function MobileNav({
       </div>
 
       {/* Action Buttons or Children */}
-      <div className="flex px-4 py-2 gap-2 justify-between">
-        {children}
-      </div>
+      <div className="flex px-4 py-2 gap-2 justify-between">{children}</div>
     </div>
   );
 }

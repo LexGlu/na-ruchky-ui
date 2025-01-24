@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -66,15 +66,11 @@ export default function LogOutModal() {
             </ModalHeader>
             <ModalBody>
               <p>Ви впевнені, що хочете вийти?</p>
-              {error && (
-                <p className="text-red-500 mt-2">
-                  {error}
-                </p>
-              )}
+              {error && <p className="text-red-500 mt-2">{error}</p>}
             </ModalBody>
             <ModalFooter className="flex justify-end gap-2">
               <button
-                className={`bg-gray-300 text-gray-800 px-4 py-2 rounded-2xl ${
+                className={`bg-gray-300 text-gray-800 px-4 py-2 rounded-2xl cursor-pointer ${
                   isProcessing ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 onClick={onClose}
@@ -83,7 +79,7 @@ export default function LogOutModal() {
                 Скасувати
               </button>
               <button
-                className={`bg-red-500 text-white px-4 py-2 rounded-2xl ${
+                className={`bg-red-500 text-white px-4 py-2 rounded-2xl cursor-pointer ${
                   isProcessing ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 onClick={handleLogout}

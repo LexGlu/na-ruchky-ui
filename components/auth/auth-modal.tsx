@@ -9,9 +9,12 @@ import { useAuth } from "@/store/auth-store";
 import { authService } from "@/lib/api/auth";
 
 import { FormField } from "@/components/ui/form-fields";
-import { PuffLoader } from "react-spinners"; 
+import { PuffLoader } from "react-spinners";
+
+import { FetchError, ApiError } from "@/lib/types/errors";
 
 import cross from "@/public/cross.svg";
+import ErrorDisplay from "@/components/ui/error-display";
 
 // Animation variants
 const overlayVariants = {
@@ -49,8 +52,8 @@ export default function AuthModal() {
   });
 
   // Errors
-  const [loginError, setLoginError] = useState("");
-  const [registerError, setRegisterError] = useState("");
+  const [loginError, setLoginError] = useState<ApiError | null>(null);
+  const [registerError, setRegisterError] = useState<ApiError | null>(null);
 
   // Loading
   const [isLoading, setIsLoading] = useState({
@@ -100,8 +103,8 @@ export default function AuthModal() {
   // Switch tabs
   const handleTabSwitch = useCallback((tab: "login" | "register") => {
     setActiveTab(tab);
-    setLoginError("");
-    setRegisterError("");
+    setLoginError(null);
+    setRegisterError(null);
   }, []);
 
   // Consolidated change handler
@@ -121,18 +124,31 @@ export default function AuthModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === "login") {
-      setLoginError("");
+      setLoginError(null);
       setIsLoading((prev) => ({ ...prev, login: true }));
       try {
         await login(loginData.email, loginData.password);
         onClose();
-      } catch {
-        setLoginError("Некоректний email або пароль");
+      } catch (err) {
+        const error = err as FetchError;
+        if (
+          error.info &&
+          typeof error.info === "object" &&
+          "message" in error.info
+        ) {
+          setLoginError(error.info as ApiError);
+        } else {
+          setLoginError({
+            status: error.status || 500,
+            message:
+              error.message || "An unexpected error occurred during login.",
+          });
+        }
       } finally {
         setIsLoading((prev) => ({ ...prev, login: false }));
       }
     } else {
-      setRegisterError("");
+      setRegisterError(null);
       setIsLoading((prev) => ({ ...prev, register: true }));
       try {
         await authService.registerUser({
@@ -141,11 +157,24 @@ export default function AuthModal() {
           firstName: registerData.firstName,
           lastName: registerData.lastName,
         });
-        // Switch to login on success
+        // Optionally, you can auto-login the user after registration
         setActiveTab("login");
-      } catch (err: unknown) {
-        const error = err as { info?: { message: string } };
-        setRegisterError(error.info?.message || "Помилка при реєстрації");
+      } catch (err) {
+        const error = err as FetchError;
+        if (
+          error.info &&
+          typeof error.info === "object" &&
+          "message" in error.info
+        ) {
+          setRegisterError(error.info as ApiError);
+        } else {
+          setRegisterError({
+            status: error.status || 500,
+            message:
+              error.message ||
+              "An unexpected error occurred during registration.",
+          });
+        }
       } finally {
         setIsLoading((prev) => ({ ...prev, register: false }));
       }
@@ -256,6 +285,7 @@ export default function AuthModal() {
                   <button
                     onClick={onClose}
                     className="flex items-center justify-center p-3 bg-white rounded-full cursor-pointer"
+                    aria-label="Close modal"
                   >
                     <Image src={cross} alt="Close" />
                   </button>
@@ -267,9 +297,10 @@ export default function AuthModal() {
                   <button
                     type="button"
                     onClick={() => handleTabSwitch("login")}
-                    className={`auth-tab px-4 mt-2py-2 text-xl text-black leading-5 rounded-t-3xl bg-white cursor-pointer ${
+                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white cursor-pointer ${
                       activeTab === "login" ? "opacity-100" : "opacity-80"
                     }`}
+                    aria-selected={activeTab === "login"}
                   >
                     Авторизація
                   </button>
@@ -281,6 +312,7 @@ export default function AuthModal() {
                     className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white cursor-pointer ${
                       activeTab === "register" ? "opacity-100" : "opacity-80"
                     }`}
+                    aria-selected={activeTab === "register"}
                   >
                     Реєстрація
                   </button>
@@ -295,32 +327,32 @@ export default function AuthModal() {
               </h2>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                {formConfigs[activeTab].fields.map((field) => (
-                  <FormField
-                    key={field.id}
-                    label={field.label}
-                    id={field.id}
-                    name={field.name}
-                    type={field.type}
-                    value={field.value}
-                    onChange={handleInputChange}
-                    required={field.required}
-                  />
-                ))}
+              <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4">
+                  {formConfigs[activeTab].fields.map((field) => (
+                    <FormField
+                      key={field.id}
+                      label={field.label}
+                      id={field.id}
+                      name={field.name}
+                      type={field.type}
+                      value={field.value}
+                      onChange={handleInputChange}
+                      required={field.required}
+                    />
+                  ))}
 
-                {/* Error */}
-                {formConfigs[activeTab].error && (
-                  <p className="text-red-600 text-sm px-2">
-                    {formConfigs[activeTab].error}
-                  </p>
-                )}
+                  {/* Error */}
+                  {formConfigs[activeTab].error && (
+                    <ErrorDisplay error={formConfigs[activeTab].error} />
+                  )}
+                </div>
 
                 {/* Submit */}
                 <button
                   type="submit"
                   disabled={formConfigs[activeTab].isLoading}
-                  className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-2 px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer"
+                  className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-[10px] px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer"
                 >
                   {formConfigs[activeTab].isLoading ? (
                     <div className="flex gap-2 items-center">

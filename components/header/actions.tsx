@@ -9,7 +9,6 @@ import { useAuth } from "@/store/auth-store";
 export default function HeaderActions() {
   const { user, setLogOutModalOpen, setAuthModalOpen } = useAuth();
 
-
   const handleLogOutBtnClick = () => {
     // Open the logout modal
     setLogOutModalOpen(true);
@@ -18,7 +17,7 @@ export default function HeaderActions() {
   const handleAuthBtnClick = () => {
     // Open the auth modal
     setAuthModalOpen(true);
-  }
+  };
 
   if (!user) {
     // Not logged in => show single “Увійти” button + paw button

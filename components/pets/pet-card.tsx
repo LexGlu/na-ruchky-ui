@@ -32,7 +32,9 @@ export default function PetCard({ listing }: PetCardProps) {
   return (
     <div className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl cursor-pointer">
       <Image
-        src={profile_picture ? `${BASE_API_URL}${profile_picture}` : petPlaceholder}
+        src={
+          profile_picture ? `${BASE_API_URL}${profile_picture}` : petPlaceholder
+        }
         alt={name}
         fill
         className="object-cover"
@@ -91,18 +93,36 @@ function NormalState({
         <div className="flex items-center gap-2">
           <h2 className="text-[28px] font-normal truncate">{name}</h2>
           {isVaccinated && (
-            <Image src={syringeIcon} alt="syringe icon" width={nameIconSize} height={nameIconSize} />
+            <Image
+              src={syringeIcon}
+              alt="syringe icon"
+              width={nameIconSize}
+              height={nameIconSize}
+            />
           )}
-          {health && <Image src={heartIcon} alt="heart icon" width={nameIconSize} height={nameIconSize} />}
+          {health && (
+            <Image
+              src={heartIcon}
+              alt="heart icon"
+              width={nameIconSize}
+              height={nameIconSize}
+            />
+          )}
         </div>
-        {Number(price) > 0 && <span className="font-normal text-nowrap">₴ {formatPrice(price)}</span>}
+        {Number(price) > 0 && (
+          <span className="font-normal text-nowrap">
+            ₴ {formatPrice(price)}
+          </span>
+        )}
       </div>
       <div className="flex justify-between text-sm mt-1">
         <div className="flex items-center bg-white py-[4px] px-[6px] rounded-lg">
           <span className="text-black font-medium">{ageText}</span>
         </div>
         <div className="flex items-center bg-white py-[4px] px-[6px] rounded-lg">
-          <span className="text-black font-medium">{location || "Невідомо"}</span>
+          <span className="text-black font-medium">
+            {location || "Невідомо"}
+          </span>
         </div>
       </div>
     </div>
@@ -146,7 +166,11 @@ function HoverState({
           <div className="w-1/2">
             <Image
               className="rounded-[10px]"
-              src={profilePicture ? `${BASE_API_URL}${profilePicture}` : petPlaceholder}
+              src={
+                profilePicture
+                  ? `${BASE_API_URL}${profilePicture}`
+                  : petPlaceholder
+              }
               alt={name}
               width={120}
               height={120}
@@ -154,24 +178,42 @@ function HoverState({
           </div>
           <div className="flex flex-col justify-between w-1/2">
             <div className="flex items-center gap-3 mb-2">
-              {health && <Image src={heartIcon} alt="heart icon" width={nameIconSize} height={nameIconSize} />}
+              {health && (
+                <Image
+                  src={heartIcon}
+                  alt="heart icon"
+                  width={nameIconSize}
+                  height={nameIconSize}
+                />
+              )}
               {isVaccinated && (
-                <Image src={syringeIcon} alt="syringe icon" width={nameIconSize} height={nameIconSize} />
+                <Image
+                  src={syringeIcon}
+                  alt="syringe icon"
+                  width={nameIconSize}
+                  height={nameIconSize}
+                />
               )}
             </div>
             <div className="flex flex-col gap-3">
               <span className="text-2xl">{name}</span>
               <div className="flex flex-col gap-1">
                 <span className="text-[#D5D5D5] leading-4">{ageText}</span>
-                <span className="text-[#D5D5D5] leading-4">{sex === "f" ? "дівчинка" : "хлопчик"}</span>
+                <span className="text-[#D5D5D5] leading-4">
+                  {sex === "f" ? "дівчинка" : "хлопчик"}
+                </span>
               </div>
             </div>
           </div>
         </div>
         <hr className="text-white opacity-25 my-4" />
         <div className="flex flex-col gap-1">
-          <span className="font-light text-white">{breed || "Невідома порода"}</span>
-          <span className="font-light text-white">{description || descriptionPlaceholder}</span>
+          <span className="font-light text-white">
+            {breed || "Невідома порода"}
+          </span>
+          <span className="font-light text-white">
+            {description || descriptionPlaceholder}
+          </span>
         </div>
       </div>
 
