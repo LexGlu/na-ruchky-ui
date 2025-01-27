@@ -7,7 +7,8 @@ function formatUkrYears(years: number): string {
   const lastOne = years % 10;
 
   if (lastOne === 1 && lastTwo !== 11) return `${years} рік`;
-  if ([2, 3, 4].includes(lastOne) && ![12, 13, 14].includes(lastTwo)) return `${years} роки`;
+  if ([2, 3, 4].includes(lastOne) && ![12, 13, 14].includes(lastTwo))
+    return `${years} роки`;
   return `${years} років`;
 }
 
@@ -17,7 +18,8 @@ function formatUkrMonths(months: number): string {
   const lastOne = months % 10;
 
   if (lastOne === 1 && lastTwo !== 11) return `${months} місяць`;
-  if ([2, 3, 4].includes(lastOne) && ![12, 13, 14].includes(lastTwo)) return `${months} місяці`;
+  if ([2, 3, 4].includes(lastOne) && ![12, 13, 14].includes(lastTwo))
+    return `${months} місяці`;
   return `${months} місяців`;
 }
 
@@ -65,7 +67,7 @@ export default function formatAge(birthDate: string | null): string {
   const years = Math.floor(totalMonths / 12);
   const remainder = totalMonths % 12;
   // If remainder >= 6 => .5
-  let finalValue = years + (remainder >= 6 ? 0.5 : 0);
+  const finalValue = years + (remainder >= 6 ? 0.5 : 0);
 
   return formatDecimalUkrYears(finalValue);
 }

@@ -1,3 +1,3 @@
-import {Geologica} from 'next/font/google';
+import { Geologica } from "next/font/google";
 
-export const geologica = Geologica({subsets: ['latin', 'cyrillic']});
+export const geologica = Geologica({ subsets: ["latin", "cyrillic"] });

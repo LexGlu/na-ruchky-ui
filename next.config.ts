@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
         hostname: domain,
         port: "8000",
         pathname: "/**",
-      }
+      },
     ],
   },
 };

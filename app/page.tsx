@@ -1,7 +1,7 @@
 import Image from "next/image";
 import heroImage from "@/public/hero-image.png";
 
-import PetsPage from "@/app/(pets)/page";
+import PetsPage from "@/app/(pets)";
 
 export default function Home() {
   return (

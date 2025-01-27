@@ -18,7 +18,13 @@ export const Pet = z.object({
   owner: z.any(),
 });
 
-export const ListingStatus = z.enum(["active", "sold", "adopted", "expired", "archived"]);
+export const ListingStatus = z.enum([
+  "active",
+  "sold",
+  "adopted",
+  "expired",
+  "archived",
+]);
 
 export const PetListing = z.object({
   id: z.string(),

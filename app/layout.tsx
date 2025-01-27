@@ -1,24 +1,26 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import Header from "@/components/header/header";
+import Header from "@/components/header";
 import Footer from "@/components/footer/footer";
-
 import { geologica } from "@/components/ui/fonts";
+
+import AuthModal from "@/components/auth/auth-modal";
+import LogOutModal from "@/components/modals/logout";
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Na.Ruchky',
-    default: 'Na.Ruchky',
+    template: "%s | Na.Ruchky",
+    default: "Na.Ruchky",
   },
-  description: 'Na.Ruchky is a convenient service for finding pets',
+  description: "Na.Ruchky is a convenient service for finding pets",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body
@@ -27,6 +29,8 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <AuthModal />
+        <LogOutModal />
       </body>
     </html>
   );
