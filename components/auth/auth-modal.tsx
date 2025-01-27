@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import Image from "next/image";
+
 import { motion, AnimatePresence } from "motion/react";
 
 import { useAuth } from "@/store/auth-store";
@@ -14,7 +15,7 @@ import { PuffLoader } from "react-spinners";
 import { FetchError, ApiError } from "@/lib/types/errors";
 
 import cross from "@/public/cross.svg";
-import ErrorDisplay from "@/components/ui/error-display";
+import AuthFeedback from "@/components/ui/auth-feedback";
 
 // Animation variants
 const overlayVariants = {
@@ -28,16 +29,25 @@ const modalVariants = {
   exit: { opacity: 0, y: "50px", scale: 0.95 },
 };
 
+type TabType = "login" | "register";
+
+interface Message {
+  type: "error" | "success" | "info";
+  text: string;
+}
+
 export default function AuthModal() {
   const { login, isAuthModalOpen, setAuthModalOpen } = useAuth();
 
   const onClose = useCallback(() => {
     // Close the modal
     setAuthModalOpen(false);
+    setLoginMessage(null);
+    setRegisterMessage(null);
   }, [setAuthModalOpen]);
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [activeTab, setActiveTab] = useState<TabType>("login");
 
   // Form state
   const [loginData, setLoginData] = useState({
@@ -51,9 +61,9 @@ export default function AuthModal() {
     lastName: "",
   });
 
-  // Errors
-  const [loginError, setLoginError] = useState<ApiError | null>(null);
-  const [registerError, setRegisterError] = useState<ApiError | null>(null);
+  // Messages
+  const [loginMessage, setLoginMessage] = useState<Message | null>(null);
+  const [registerMessage, setRegisterMessage] = useState<Message | null>(null);
 
   // Loading
   const [isLoading, setIsLoading] = useState({
@@ -101,10 +111,10 @@ export default function AuthModal() {
   );
 
   // Switch tabs
-  const handleTabSwitch = useCallback((tab: "login" | "register") => {
+  const handleTabSwitch = useCallback((tab: TabType) => {
     setActiveTab(tab);
-    setLoginError(null);
-    setRegisterError(null);
+    setLoginMessage(null);
+    setRegisterMessage(null);
   }, []);
 
   // Consolidated change handler
@@ -124,7 +134,7 @@ export default function AuthModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === "login") {
-      setLoginError(null);
+      setLoginMessage(null);
       setIsLoading((prev) => ({ ...prev, login: true }));
       try {
         await login(loginData.email, loginData.password);
@@ -136,19 +146,21 @@ export default function AuthModal() {
           typeof error.info === "object" &&
           "message" in error.info
         ) {
-          setLoginError(error.info as ApiError);
+          setLoginMessage({
+            type: "error",
+            text: (error.info as ApiError).message,
+          });
         } else {
-          setLoginError({
-            status: error.status || 500,
-            message:
-              error.message || "An unexpected error occurred during login.",
+          setLoginMessage({
+            type: "error",
+            text: error.message || "An unexpected error occurred during login.",
           });
         }
       } finally {
         setIsLoading((prev) => ({ ...prev, login: false }));
       }
     } else {
-      setRegisterError(null);
+      setRegisterMessage(null);
       setIsLoading((prev) => ({ ...prev, register: true }));
       try {
         await authService.registerUser({
@@ -157,8 +169,11 @@ export default function AuthModal() {
           firstName: registerData.firstName,
           lastName: registerData.lastName,
         });
-        // Optionally, you can auto-login the user after registration
         setActiveTab("login");
+        setLoginMessage({
+          type: "success",
+          text: "Реєстрація успішна! Будь ласка, перевірте свій email для підтвердження.",
+        });
       } catch (err) {
         const error = err as FetchError;
         if (
@@ -166,11 +181,14 @@ export default function AuthModal() {
           typeof error.info === "object" &&
           "message" in error.info
         ) {
-          setRegisterError(error.info as ApiError);
+          setRegisterMessage({
+            type: "error",
+            text: (error.info as ApiError).message,
+          });
         } else {
-          setRegisterError({
-            status: error.status || 500,
-            message:
+          setRegisterMessage({
+            type: "error",
+            text:
               error.message ||
               "An unexpected error occurred during registration.",
           });
@@ -181,7 +199,6 @@ export default function AuthModal() {
     }
   };
 
-  // Configuration for each tab to reduce repetition
   const formConfigs = {
     login: {
       title: "Для входу у кабінет введіть свій email",
@@ -193,6 +210,7 @@ export default function AuthModal() {
           type: "email",
           value: loginData.email,
           required: true,
+          showRequiredIndicator: false,
         },
         {
           label: "Пароль",
@@ -201,9 +219,10 @@ export default function AuthModal() {
           type: "password",
           value: loginData.password,
           required: true,
+          showRequiredIndicator: false,
         },
       ],
-      error: loginError,
+      message: loginMessage,
       isLoading: isLoading.login,
       button: {
         normalText: "Відправити",
@@ -220,6 +239,7 @@ export default function AuthModal() {
           type: "email",
           value: registerData.email,
           required: true,
+          showRequiredIndicator: true,
         },
         {
           label: "Пароль",
@@ -228,6 +248,7 @@ export default function AuthModal() {
           type: "password",
           value: registerData.password,
           required: true,
+          showRequiredIndicator: true,
         },
         {
           label: "Ім’я",
@@ -236,6 +257,7 @@ export default function AuthModal() {
           type: "text",
           value: registerData.firstName,
           required: false,
+          showRequiredIndicator: false,
         },
         {
           label: "Прізвище",
@@ -244,9 +266,10 @@ export default function AuthModal() {
           type: "text",
           value: registerData.lastName,
           required: false,
+          showRequiredIndicator: false,
         },
       ],
-      error: registerError,
+      message: registerMessage,
       isLoading: isLoading.register,
       button: {
         normalText: "Відправити",
@@ -339,12 +362,16 @@ export default function AuthModal() {
                       value={field.value}
                       onChange={handleInputChange}
                       required={field.required}
+                      showRequiredIndicator={field.showRequiredIndicator}
                     />
                   ))}
 
                   {/* Error */}
-                  {formConfigs[activeTab].error && (
-                    <ErrorDisplay error={formConfigs[activeTab].error} />
+                  {formConfigs[activeTab].message && (
+                    <AuthFeedback
+                      type={formConfigs[activeTab].message.type}
+                      message={formConfigs[activeTab].message.text}
+                    />
                   )}
                 </div>
 
