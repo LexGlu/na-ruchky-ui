@@ -315,12 +315,12 @@ export default function AuthModal() {
                 </div>
               </div>
 
-              <div className="flex gap-10">
-                <div className="relative flex">
+              <div className="flex gap-[-4px]">
+                <div className="relative flex mr-[4px]">
                   <button
                     type="button"
                     onClick={() => handleTabSwitch("login")}
-                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white cursor-pointer ${
+                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                       activeTab === "login" ? "opacity-100" : "opacity-80"
                     }`}
                     aria-selected={activeTab === "login"}
@@ -328,11 +328,11 @@ export default function AuthModal() {
                     Авторизація
                   </button>
                 </div>
-                <div className="relative flex">
+                <div className="relative flex ml-[-12px]">
                   <button
                     type="button"
                     onClick={() => handleTabSwitch("register")}
-                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-3xl bg-white cursor-pointer ${
+                    className={`auth-tab px-6 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                       activeTab === "register" ? "opacity-100" : "opacity-80"
                     }`}
                     aria-selected={activeTab === "register"}
