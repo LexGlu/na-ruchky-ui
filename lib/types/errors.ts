@@ -1,3 +1,5 @@
+// TODO: Refactor this code to align with best practices
+
 /**
  * Custom error class to handle fetch-related errors.
  */
@@ -20,11 +22,11 @@ export class FetchError extends Error {
 /**
  * General API Error Interface
  */
-export interface ApiError {
+export interface ApiError<T = unknown> {
   status: number;
   message: string;
   code?: string;
-  details?: any;
+  details?: T;
 }
 
 /**
@@ -62,6 +64,10 @@ export interface Django422Response {
   detail: Django422ErrorDetail[];
 }
 
+export interface DjangoNotFoundError {
+  detail: string;
+}
+
 /**
  * Union Type for Possible Error Responses from Backend
  */
@@ -69,5 +75,6 @@ export type BackendErrorResponse =
   | DjangoNinjaErrorResponse
   | DjangoErrorResponseDetail[]
   | Django422Response
+  | DjangoNotFoundError
   | ValidationError
   | ApiError;

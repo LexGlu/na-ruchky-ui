@@ -19,10 +19,9 @@ export default function Footer() {
       </div>
       <div>
         <span className="font-medium text-[310px] text-[#333333] tracking-[-.04em]">
-            Na.ruchky
+          Na.ruchky
         </span>
       </div>
-
     </footer>
   );
 }

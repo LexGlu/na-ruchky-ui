@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { PetListing } from "@/lib/types/pets";
 import { BASE_API_URL } from "@/lib/api/request";
@@ -16,13 +17,13 @@ interface PetCardProps {
 }
 
 export default function PetCard({ listing }: PetCardProps) {
-  const { pet, title, price } = listing;
+  const { id, pet, title, price } = listing;
   const {
     name,
     breed,
     sex,
     birth_date,
-    description,
+    short_description,
     health,
     location,
     is_vaccinated,
@@ -30,7 +31,11 @@ export default function PetCard({ listing }: PetCardProps) {
   } = pet;
 
   return (
-    <div className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl cursor-pointer">
+    <Link
+      href={`/listings/${id}`}
+      passHref
+      className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl"
+    >
       <Image
         src={
           profile_picture ? `${BASE_API_URL}${profile_picture}` : petPlaceholder
@@ -56,12 +61,12 @@ export default function PetCard({ listing }: PetCardProps) {
         breed={breed}
         sex={sex}
         birthDate={birth_date}
-        description={description}
+        description={short_description}
         health={health}
         isVaccinated={is_vaccinated}
         profilePicture={profile_picture}
       />
-    </div>
+    </Link>
   );
 }
 
