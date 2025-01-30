@@ -1,19 +1,23 @@
 import type { NextConfig } from "next";
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN || "localhost";
-
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: domain,
-        port: "",
-        pathname: "/media/**",
+        hostname: "storage.googleapis.com",
+        pathname: "/naruchky/**",
       },
       {
         protocol: "http",
-        hostname: domain,
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
         port: "8000",
         pathname: "/**",
       },

@@ -1,4 +1,5 @@
-import { safeFetch, BASE_API_URL } from "@/lib/api/request";
+import { safeFetch } from "@/lib/api/request";
+import { BASE_API_URL } from "@/lib/api/constants";
 import { PetListing, PetListingArrayResponse } from "@/lib/types/pets";
 
 export async function fetchPetListings(): Promise<PetListing[]> {

@@ -1,4 +1,6 @@
 import Cookies from "js-cookie";
+
+import { BASE_API_URL } from "@/lib/api/constants";
 import { FetchError, BackendErrorResponse, ApiError } from "@/lib/types/errors";
 import {
   isDjangoNinjaErrorResponse,
@@ -8,13 +10,6 @@ import {
   isValidationError,
   isApiError,
 } from "@/lib/types/type-guards";
-
-/**
- * Base URL for the API.
- * Ensure that NEXT_PUBLIC_API_BASE_URL is set in your environment variables.
- */
-export const BASE_API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 /**
  * Retrieves CSRF token from cookies or fetches it from the backend if not present.

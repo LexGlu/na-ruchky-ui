@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { PetListing } from "@/lib/types/pets";
-import { BASE_API_URL } from "@/lib/api/request";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
 
@@ -37,9 +36,7 @@ export default function PetCard({ listing }: PetCardProps) {
       className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl"
     >
       <Image
-        src={
-          profile_picture ? `${BASE_API_URL}${profile_picture}` : petPlaceholder
-        }
+        src={profile_picture ? profile_picture : petPlaceholder}
         alt={name}
         fill
         className="object-cover"
@@ -171,11 +168,7 @@ function HoverState({
           <div className="w-1/2">
             <Image
               className="rounded-[10px]"
-              src={
-                profilePicture
-                  ? `${BASE_API_URL}${profilePicture}`
-                  : petPlaceholder
-              }
+              src={profilePicture ? profilePicture : petPlaceholder}
               alt={name}
               width={120}
               height={120}

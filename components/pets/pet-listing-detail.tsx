@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { PetListing } from "@/lib/types/pets";
-import { BASE_API_URL } from "@/lib/api/request";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
 import petPlaceholder from "@/public/pet_placeholder.png";
@@ -51,11 +50,7 @@ export default function PetDetail({ listing }: PetDetailProps) {
 
         <div className="col-span-2 flex gap-10">
           <Image
-            src={
-              profile_picture
-                ? `${BASE_API_URL}${profile_picture}`
-                : petPlaceholder
-            }
+            src={profile_picture ? profile_picture : petPlaceholder}
             alt={name}
             width={404}
             height={598}

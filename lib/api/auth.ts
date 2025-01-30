@@ -1,6 +1,8 @@
-import { safeFetch, BASE_API_URL } from "@/lib/api/request";
+import { safeFetch } from "@/lib/api/request";
 import { User } from "@/lib/types/user";
 import { FetchError } from "@/lib/types/errors";
+
+import { BASE_API_URL } from "@/lib/api/constants";
 
 /**
  * Data structure for user registration.
