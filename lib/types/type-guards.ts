@@ -1,7 +1,10 @@
+// TODO: Refactor this code to align with best practices
+
 import {
   BackendErrorResponse,
   DjangoNinjaErrorResponse,
   DjangoErrorResponseDetail,
+  DjangoNotFoundError,
   Django422Response,
   ValidationError,
   ApiError,
@@ -55,6 +58,21 @@ export function isValidationError(
     errorResponse !== null &&
     "errors" in errorResponse &&
     typeof (errorResponse as ValidationError).errors === "object"
+  );
+}
+
+/**
+ * Type guard to check if errorResponse is DjangoNotFoundError
+ */
+export function isDjangoNotFoundError(
+  errorResponse: BackendErrorResponse
+): errorResponse is DjangoNotFoundError {
+  return (
+    typeof errorResponse === "object" &&
+    errorResponse !== null &&
+    "detail" in errorResponse &&
+    typeof (errorResponse as DjangoNotFoundError).detail === "string" &&
+    /not found/i.test((errorResponse as DjangoNotFoundError).detail)
   );
 }
 

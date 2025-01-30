@@ -2,6 +2,7 @@ import Cookies from "js-cookie";
 import { FetchError, BackendErrorResponse, ApiError } from "@/lib/types/errors";
 import {
   isDjangoNinjaErrorResponse,
+  isDjangoNotFoundError,
   isDjango422Response,
   isDjangoErrorResponseDetailArray,
   isValidationError,
@@ -50,10 +51,18 @@ async function getCSRFToken(): Promise<string> {
  * @returns An ApiError object.
  */
 function normalizeError(errorResponse: BackendErrorResponse): ApiError {
+  if (isDjangoNotFoundError(errorResponse)) {
+    // Django Not Found Error
+    return {
+      status: 404,
+      message: "Resource not found.",
+    };
+  }
+
   if (isDjangoNinjaErrorResponse(errorResponse)) {
     // Django Ninja Error Response
     return {
-      status: 400, // Assuming Bad Request for Ninja errors; adjust as needed
+      status: 400,
       message: errorResponse.message,
     };
   }

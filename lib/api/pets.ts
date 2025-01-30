@@ -8,3 +8,9 @@ export async function fetchPetListings(): Promise<PetListing[]> {
   );
   return data.items;
 }
+
+export async function fetchPetListing(uuid: string): Promise<PetListing> {
+  return safeFetch<PetListing>(`${BASE_API_URL}/api/v1/pet-listings/${uuid}`, {
+    next: { revalidate: 30 },
+  });
+}

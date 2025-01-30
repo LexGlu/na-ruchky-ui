@@ -323,7 +323,6 @@ export default function AuthModal() {
                     className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                       activeTab === "login" ? "opacity-100" : "opacity-80"
                     }`}
-                    aria-selected={activeTab === "login"}
                   >
                     Авторизація
                   </button>
@@ -335,7 +334,6 @@ export default function AuthModal() {
                     className={`auth-tab px-6 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                       activeTab === "register" ? "opacity-100" : "opacity-80"
                     }`}
-                    aria-selected={activeTab === "register"}
                   >
                     Реєстрація
                   </button>
