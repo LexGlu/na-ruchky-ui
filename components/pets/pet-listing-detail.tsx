@@ -1,13 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { PetListing } from "@/lib/types/pets";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
+import { getImageUrl } from "@/lib/utils/get-image-url";
+
 import petPlaceholder from "@/public/pet_placeholder.png";
 import telegramIcon from "@/public/icons/telegram.svg";
 import whatsapp from "@/public/icons/whatsapp.svg";
-import Link from "next/link";
 
 interface PetDetailProps {
   listing: PetListing;
@@ -24,6 +26,8 @@ export default function PetDetail({ listing }: PetDetailProps) {
     profile_picture,
     tags,
   } = pet;
+
+  const imageUrl = getImageUrl(profile_picture) || petPlaceholder.src;
 
   return (
     <div className="w-full mx-auto text-black flex flex-col gap-1">
@@ -50,11 +54,12 @@ export default function PetDetail({ listing }: PetDetailProps) {
 
         <div className="col-span-2 flex gap-10">
           <Image
-            src={profile_picture ? profile_picture : petPlaceholder}
+            src={imageUrl}
             alt={name}
             width={404}
             height={598}
             className="object-contain rounded-3xl"
+            priority
           />
           <div className="flex flex-col gap-10">
             <div className="flex flex-wrap gap-[10px]">

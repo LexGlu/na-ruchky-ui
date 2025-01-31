@@ -5,6 +5,7 @@ import Image from "next/image";
 import { PetListing } from "@/lib/types/pets";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
+import { getImageUrl } from "@/lib/utils/get-image-url";
 
 import petPlaceholder from "@/public/pet_placeholder.png";
 import heartIcon from "@/public/heart.svg";
@@ -29,6 +30,8 @@ export default function PetCard({ listing }: PetCardProps) {
     profile_picture,
   } = pet;
 
+  const imageUrl = getImageUrl(profile_picture) || petPlaceholder.src;
+
   return (
     <Link
       href={`/listings/${id}`}
@@ -36,11 +39,12 @@ export default function PetCard({ listing }: PetCardProps) {
       className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl"
     >
       <Image
-        src={profile_picture ? profile_picture : petPlaceholder}
+        src={imageUrl}
         alt={name}
         fill
         className="object-cover"
         sizes="(max-width: 270px) 100vw, 270px"
+        priority
       />
 
       <NormalState
@@ -61,7 +65,7 @@ export default function PetCard({ listing }: PetCardProps) {
         description={short_description}
         health={health}
         isVaccinated={is_vaccinated}
-        profilePicture={profile_picture}
+        profilePicture={imageUrl}
       />
     </Link>
   );
@@ -137,13 +141,13 @@ function NormalState({
 interface HoverStateProps {
   title: string;
   name: string;
+  profilePicture: string;
   breed?: string | null;
   sex?: string | null;
   birthDate?: string | null;
   description?: string | null;
   health?: string | null;
   isVaccinated?: boolean;
-  profilePicture?: string | null;
 }
 function HoverState({
   title,
@@ -168,10 +172,11 @@ function HoverState({
           <div className="w-1/2">
             <Image
               className="rounded-[10px]"
-              src={profilePicture ? profilePicture : petPlaceholder}
+              src={profilePicture}
               alt={name}
               width={120}
               height={120}
+              priority
             />
           </div>
           <div className="flex flex-col justify-between w-1/2">
