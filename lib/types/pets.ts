@@ -82,3 +82,48 @@ export const PetListingArrayResponse = z.object({
   count: z.number(),
 });
 export type PetListingArrayResponse = z.infer<typeof PetListingArrayResponse>;
+
+export interface FilterOption {
+  label: string;
+  options: Array<{
+    label: string;
+    value: string;
+    maxAgeValue?: string;
+    minAgeValue?: string;
+  }>;
+  param: string;
+  secondaryParam?: string;
+}
+
+export const filterOptions: FilterOption[] = [
+  {
+    label: "Стаж",
+    options: [
+      { label: "0-1 рік", value: "0-1", minAgeValue: "", maxAgeValue: "1" },
+      { label: "1-3 роки", value: "1-3", minAgeValue: "1", maxAgeValue: "3" },
+      { label: "3+ років", value: "3+", minAgeValue: "3", maxAgeValue: "" },
+    ],
+    param: "min_age",
+    secondaryParam: "max_age",
+  },
+  {
+    label: "Стать",
+    options: [
+      { label: "Дівчинка", value: "f" },
+      { label: "Хлопчик", value: "m" },
+    ],
+    param: "sex",
+  },
+  {
+    label: "Офіс",
+    options: [
+      { label: "Київ", value: "київ" },
+      { label: "Львів", value: "львів" },
+      { label: "Одеса", value: "одеса" },
+      { label: "Харків", value: "харків" },
+    ],
+    param: "location",
+  },
+];
+
+export type PetType = "all" | "cats" | "dogs";

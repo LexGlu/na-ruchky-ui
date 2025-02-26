@@ -36,8 +36,7 @@ export default function PetCard({ listing }: PetCardProps) {
     <Link
       href={`/listings/${id}`}
       passHref
-      className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl"
-    >
+      className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl">
       <Image
         src={imageUrl}
         alt={name}
@@ -224,8 +223,7 @@ function HoverState({
         <button
           type="button"
           className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-70"
-          aria-label="Learn more"
-        >
+          aria-label="Learn more">
           <Image src={playBtn} alt="play button" width={20} height={20} />
         </button>
       </div>
