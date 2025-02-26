@@ -6,6 +6,7 @@ import { PetListing } from "@/lib/types/pets";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
 import { getImageUrl } from "@/lib/utils/get-image-url";
+import { useState } from "react";
 
 import petPlaceholder from "@/public/pet_placeholder.png";
 import heartIcon from "@/public/heart.svg";
@@ -14,6 +15,12 @@ import playBtn from "@/public/play-btn.svg";
 
 interface PetCardProps {
   listing: PetListing;
+}
+
+function Skeleton() {
+  return (
+    <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-xl" />
+  );
 }
 
 export default function PetCard({ listing }: PetCardProps) {
@@ -31,19 +38,24 @@ export default function PetCard({ listing }: PetCardProps) {
   } = pet;
 
   const imageUrl = getImageUrl(profile_picture) || petPlaceholder.src;
+  const [isLoadingImage, setIsLoadingImage] = useState(true);
 
   return (
     <Link
       href={`/listings/${id}`}
       passHref
       className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl">
+      {isLoadingImage && <Skeleton />}
       <Image
         src={imageUrl}
         alt={name}
         fill
-        className="object-cover"
+        className={`object-cover ${
+          isLoadingImage ? "opacity-0" : "opacity-100"
+        }`}
         sizes="(max-width: 270px) 100vw, 270px"
         priority
+        onLoadingComplete={() => setIsLoadingImage(false)}
       />
 
       <NormalState
