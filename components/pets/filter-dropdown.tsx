@@ -1,9 +1,12 @@
 "use client";
 
 import { memo } from "react";
-import { CircleArrowDown, X } from "lucide-react";
+import Image from "next/image";
+import { X } from "lucide-react";
 import { useClickAway } from "@/hooks/use-click-away";
 import { FilterOption } from "@/lib/types/pets";
+
+import CircleArrowDown from "@/public/icons/circle-arrow-down.svg";
 
 interface FilterDropdownProps {
   filter: FilterOption;
@@ -60,9 +63,14 @@ const FilterDropdown = memo(function FilterDropdown({
             </button>
           </div>
         )}
-        <CircleArrowDown
-          size={16}
-          className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+
+        <Image
+          src={CircleArrowDown}
+          sizes="16"
+          className={`transition-transform duration-300 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          alt="circle-arrow-down icon"
           aria-hidden="true"
         />
       </div>

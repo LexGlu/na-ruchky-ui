@@ -22,8 +22,7 @@ export default function NotFound() {
         href="/"
         className="px-6 py-3 bg-[#CAF97C] opacity-90 text-black rounded-3xl font-medium
                      transition-all duration-200 hover:opacity-100
-                     active:transform active:scale-95"
-      >
+                     active:transform active:scale-95">
         <span>←&nbsp;&nbsp;Повернутися на головну</span>
       </Link>
     </div>
