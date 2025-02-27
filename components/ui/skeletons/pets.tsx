@@ -31,3 +31,22 @@ export function PetCardSkeletons() {
     </div>
   );
 }
+
+/**
+ * Skeleton component mimicking the new pet card.
+ */
+export function NewPetCardSkeleton() {
+  return (
+    <div className="relative w-[220px] h-[310px]">
+      <div className="h-full w-full rounded-[20px] overflow-hidden bg-gray-200 animate-pulse">
+        {/* Empty div for the image area */}
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 rounded-[20px] bg-white m-1 px-4 py-3 shadow-sm">
+        {/* Title skeleton */}
+        <div className="h-[24px] bg-gray-200 rounded-md animate-pulse mb-2"></div>
+        {/* Subtitle skeleton */}
+        <div className="h-[16px] bg-gray-200 rounded-md animate-pulse w-3/4"></div>
+      </div>
+    </div>
+  );
+}

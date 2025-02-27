@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo, Suspense } from "react";
 
+import NewPetListings from "@/components/pets/new-listings";
 import PetsFilter from "@/components/pets/pet-filter";
 import PetList from "@/components/pets/pet-list";
 import { PetCardSkeletons } from "@/components/ui/skeletons/pets";
@@ -54,6 +55,7 @@ export default function PetsPage() {
   return (
     <>
       <Image src={heroImage} alt="Na.ruchky" priority />
+      <NewPetListings />
       <div className="flex flex-col w-full py-8 px-4 bg-white rounded-[20px]">
         <Suspense fallback={<PetCardSkeletons />}>
           <PetsContent />
