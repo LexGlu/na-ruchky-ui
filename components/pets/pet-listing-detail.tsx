@@ -66,8 +66,7 @@ export default function PetDetail({ listing }: PetDetailProps) {
               {tags?.map((tag) => (
                 <span
                   key={tag}
-                  className="px-[10px] py-[6px] text-lg font-light text-black border border-black rounded-full text-nowrap"
-                >
+                  className="px-[10px] py-[6px] text-lg font-light text-black border border-black rounded-full text-nowrap">
                   {tag}
                 </span>
               ))}
@@ -104,8 +103,7 @@ export default function PetDetail({ listing }: PetDetailProps) {
           <h3 className="text-4xl font-light">₴ {formatPrice(price)}</h3>
           <Link
             href="/checkout"
-            className="flex items-center gap-2 text-sm text-black bg-[#ABE34D] rounded-2xl px-[26px] py-[10px]"
-          >
+            className="flex items-center gap-2 text-sm text-black bg-[#ABE34D] rounded-2xl px-[26px] py-[10px]">
             Взяти “На ручки”
           </Link>
         </div>

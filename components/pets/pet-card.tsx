@@ -12,6 +12,7 @@ import petPlaceholder from "@/public/pet_placeholder.png";
 import heartIcon from "@/public/heart.svg";
 import syringeIcon from "@/public/syringe.svg";
 import playBtn from "@/public/play-btn.svg";
+import petCardLoader from "@/public/icons/pet-card-loader.svg";
 
 interface PetCardProps {
   listing: PetListing;
@@ -19,7 +20,17 @@ interface PetCardProps {
 
 function Skeleton() {
   return (
-    <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-xl" />
+    <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-xl overflow-hidden">
+      {/* Skeleton Loader (paw icon) */}
+      <div className="h-full w-full flex items-center justify-center">
+        <Image
+          src={petCardLoader}
+          alt="pet card loader"
+          width={100}
+          height={100}
+        />
+      </div>
+    </div>
   );
 }
 
