@@ -38,10 +38,10 @@ export function PetCardSkeletons() {
 export function NewPetCardSkeleton() {
   return (
     <div className="relative w-[220px] h-[310px]">
-      <div className="h-full w-full rounded-[20px] overflow-hidden bg-gray-200 animate-pulse">
+      <div className="h-full w-full rounded-[12px] overflow-hidden bg-gray-200 animate-pulse">
         {/* Empty div for the image area */}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 rounded-[20px] bg-white m-1 px-4 py-3 shadow-sm">
+      <div className="absolute bottom-0 left-0 right-0 rounded-[10px] bg-white m-1 px-4 py-3 shadow-sm">
         {/* Title skeleton */}
         <div className="h-[24px] bg-gray-200 rounded-md animate-pulse mb-2"></div>
         {/* Subtitle skeleton */}

@@ -43,7 +43,7 @@ export default function EnhancedPetCard({ pet }: PetCardProps) {
         ref={cardRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="relative h-full w-full rounded-[20px] overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md"
+        className="relative h-full w-full rounded-[12px] overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md"
         style={{
           transform: `perspective(1000px) rotateX(${
             -mousePosition.y * 0.03
@@ -55,7 +55,7 @@ export default function EnhancedPetCard({ pet }: PetCardProps) {
         }}>
         {/* Skeleton Loader */}
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-[20px]">
+          <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-[12px]">
             <div className="h-full w-full flex items-center justify-center">
               <Image
                 src={petCardLoader}
@@ -108,7 +108,7 @@ export default function EnhancedPetCard({ pet }: PetCardProps) {
 
       {/* Info Card */}
       <div
-        className="absolute bottom-0 left-0 right-0 rounded-[20px] bg-white m-1 px-4 py-3 shadow-sm transition-all duration-300 group-hover:shadow-md"
+        className="absolute bottom-0 left-0 right-0 rounded-[10px] bg-white m-1 px-4 py-3 shadow-sm transition-all duration-300 group-hover:shadow-md"
         style={{
           transform: `perspective(1000px) rotateX(${
             -mousePosition.y * 0.03
