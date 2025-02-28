@@ -283,7 +283,7 @@ export default function AuthModal() {
     <AnimatePresence>
       {isAuthModalOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm text-black"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm text-black px-2 lg:px-0"
           onClick={handleOutsideClick}
           aria-modal="true"
           role="dialog"
@@ -291,16 +291,14 @@ export default function AuthModal() {
           animate="visible"
           exit="hidden"
           variants={overlayVariants}
-          transition={{ duration: 0.3 }}
-        >
+          transition={{ duration: 0.3 }}>
           <motion.div
             className="relative w-full max-w-md"
             initial="hidden"
             animate="visible"
             exit="exit"
             variants={modalVariants}
-            transition={{ duration: 0.3 }}
-          >
+            transition={{ duration: 0.3 }}>
             {/* Tab Headers & Close Button */}
             <div className="flex gap-2">
               <div className="flex">
@@ -308,8 +306,7 @@ export default function AuthModal() {
                   <button
                     onClick={onClose}
                     className="flex items-center justify-center p-3 bg-white rounded-full cursor-pointer"
-                    aria-label="Close modal"
-                  >
+                    aria-label="Close modal">
                     <Image src={cross} alt="Close" />
                   </button>
                 </div>
@@ -322,8 +319,7 @@ export default function AuthModal() {
                     onClick={() => handleTabSwitch("login")}
                     className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                       activeTab === "login" ? "opacity-100" : "opacity-80"
-                    }`}
-                  >
+                    }`}>
                     Авторизація
                   </button>
                 </div>
@@ -333,8 +329,7 @@ export default function AuthModal() {
                     onClick={() => handleTabSwitch("register")}
                     className={`auth-tab px-6 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                       activeTab === "register" ? "opacity-100" : "opacity-80"
-                    }`}
-                  >
+                    }`}>
                     Реєстрація
                   </button>
                 </div>
@@ -377,8 +372,7 @@ export default function AuthModal() {
                 <button
                   type="submit"
                   disabled={formConfigs[activeTab].isLoading}
-                  className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-[10px] px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer"
-                >
+                  className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-[10px] px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer">
                   {formConfigs[activeTab].isLoading ? (
                     <div className="flex gap-2 items-center">
                       <PuffLoader size={20} />

@@ -11,7 +11,7 @@ interface PetListProps {
 export default function PetList({ petListings }: PetListProps) {
   if (!petListings.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center min-h-[401px]">
         <div className="bg-gray-100 rounded-full p-6 mb-4">
           <SearchX size={48} className="text-gray-400" />
         </div>

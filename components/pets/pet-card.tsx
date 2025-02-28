@@ -55,7 +55,7 @@ export default function PetCard({ listing }: PetCardProps) {
     <Link
       href={`/listings/${id}`}
       passHref
-      className="relative group w-[270px] h-[401px] overflow-hidden rounded-xl">
+      className="relative group w-full sm:w-[270px] h-[401px] overflow-hidden rounded-xl">
       {isLoadingImage && <Skeleton />}
       <Image
         src={imageUrl}
@@ -64,7 +64,7 @@ export default function PetCard({ listing }: PetCardProps) {
         className={`object-cover ${
           isLoadingImage ? "opacity-0" : "opacity-100"
         }`}
-        sizes="(max-width: 270px) 100vw, 270px"
+        sizes="(max-width: 640px) 100vw, 270px"
         priority
         onLoadingComplete={() => setIsLoadingImage(false)}
       />

@@ -34,8 +34,7 @@ export default function Header() {
               <Link
                 href="/"
                 className="bg-[#CAF97C] hover:bg-lime-400 text-black font-normal py-[10px] px-[26px] rounded-2xl"
-                aria-label="Add announcement"
-              >
+                aria-label="Add announcement">
                 Додати оголошення
               </Link>
 
@@ -44,14 +43,13 @@ export default function Header() {
           </DesktopNav>
 
           {/* Mobile nav toggle (hamburger) */}
-          <button
-            type="button"
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none"
-            aria-label="Toggle mobile navigation"
-            onClick={toggleMobileNav}
-          >
-            <Hamburger toggled={isMobileOpen} toggle={setIsMobileOpen} />
-          </button>
+          <div className="md:hidden text-gray-700">
+            <Hamburger
+              toggled={isMobileOpen}
+              toggle={toggleMobileNav}
+              size={20}
+            />
+          </div>
         </div>
       </div>
 
@@ -59,8 +57,7 @@ export default function Header() {
       <MobileNav
         navLinks={navLinks}
         isOpen={isMobileOpen}
-        onClose={closeMobileNav}
-      >
+        onClose={closeMobileNav}>
         {/* The right side actions for mobile */}
         <HeaderActions />
       </MobileNav>

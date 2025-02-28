@@ -7,10 +7,9 @@ export default function Footer() {
   return (
     <footer
       className="bg-white w-full border-t border-gray-200 p-1 mt-1 rounded-t-[20px] max-h-[430px] overflow-hidden"
-      role="contentinfo"
-    >
+      role="contentinfo">
       {/* Container */}
-      <div className="mx-auto sm:px-6 lg:px-8 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Left side: navigation links */}
         <FooterNav />
 
@@ -18,7 +17,7 @@ export default function Footer() {
         <FooterDonate />
       </div>
       <div>
-        <span className="font-medium text-[310px] text-[#333333] tracking-[-.04em]">
+        <span className="font-medium text-[90px] lg:text-[310px] text-[#333333] tracking-[-.04em]">
           Na.ruchky
         </span>
       </div>

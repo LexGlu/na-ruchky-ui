@@ -84,7 +84,7 @@ function PetsFilter() {
               onClick={handleClearAllFilters}
               className="ml-2 text-sm text-black hover:underline cursor-pointer"
               aria-label="Очистити всі фільтри">
-              Очистити всі
+              Очистити фільтри
             </button>
           )}
         </div>

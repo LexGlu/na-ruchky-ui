@@ -21,15 +21,13 @@ const navLinks: NavLink[] = [
 export default function FooterNav() {
   return (
     <nav
-      className="grid grid-cols-4 grid-rows-2 gap-x-14 gap-y-4 text-black"
-      aria-label="Footer navigation"
-    >
+      className="grid grid-cols-2 sm:grid-cols-4 grid-rows-2 gap-x-10 sm:gap-x-14 gap-y-4 text-black"
+      aria-label="Footer navigation">
       {navLinks.map((link) => (
         <Link
           key={link.label}
           href={link.href}
-          className="hover:underline focus:underline text-lg"
-        >
+          className="hover:underline focus:underline text-sm sm:text-lg">
           {link.label}
         </Link>
       ))}

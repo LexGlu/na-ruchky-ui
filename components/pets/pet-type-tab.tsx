@@ -30,7 +30,7 @@ const PetTypeTab = memo(function PetTypeTab({
           : "bg-white text-black hover:bg-gray-50"
       }`}
       aria-pressed={activeType === type}>
-      <span className="text-lg">{LABELS[type]}</span>
+      <span className="sm:text-lg">{LABELS[type]}</span>
     </button>
   );
 });
