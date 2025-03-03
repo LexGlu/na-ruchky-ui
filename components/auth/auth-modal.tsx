@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "@/store/auth-store";
 import { authService } from "@/lib/api/auth";
 
+import GoogleAuthButton from "@/components/auth/google-auth-btn";
+
 import { FormField } from "@/components/ui/form-fields";
 import { PuffLoader } from "react-spinners";
 
@@ -37,7 +39,7 @@ interface Message {
 }
 
 export default function AuthModal() {
-  const { login, isAuthModalOpen, setAuthModalOpen } = useAuth();
+  const { login, googleLogin, isAuthModalOpen, setAuthModalOpen } = useAuth();
 
   const onClose = useCallback(() => {
     // Close the modal
@@ -69,6 +71,7 @@ export default function AuthModal() {
   const [isLoading, setIsLoading] = useState({
     login: false,
     register: false,
+    google: false,
   });
 
   // Prevent body scroll when modal is open
@@ -129,6 +132,19 @@ export default function AuthModal() {
     },
     [activeTab]
   );
+
+  // Handle Google login success
+  const handleGoogleLoginSuccess = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  // Handle Google login error
+  const handleGoogleLoginError = useCallback((errorMessage: string) => {
+    setLoginMessage({
+      type: "error",
+      text: errorMessage || "An error occurred during Google sign-in.",
+    });
+  }, []);
 
   // Handle form submits depending on tab
   const handleSubmit = async (e: React.FormEvent) => {
@@ -251,7 +267,7 @@ export default function AuthModal() {
           showRequiredIndicator: true,
         },
         {
-          label: "Ім’я",
+          label: "Ім'я",
           id: "regFirstName",
           name: "firstName",
           type: "text",
@@ -280,114 +296,136 @@ export default function AuthModal() {
 
   // If not open, don't render anything
   const modalContent = (
-    <AnimatePresence>
-      {isAuthModalOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm text-black px-2 lg:px-0"
-          onClick={handleOutsideClick}
-          aria-modal="true"
-          role="dialog"
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-          variants={overlayVariants}
-          transition={{ duration: 0.3 }}>
+    <>
+      <AnimatePresence>
+        {isAuthModalOpen && (
           <motion.div
-            className="relative w-full max-w-md"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm text-black px-2 lg:px-0"
+            onClick={handleOutsideClick}
+            aria-modal="true"
+            role="dialog"
             initial="hidden"
             animate="visible"
-            exit="exit"
-            variants={modalVariants}
+            exit="hidden"
+            variants={overlayVariants}
             transition={{ duration: 0.3 }}>
-            {/* Tab Headers & Close Button */}
-            <div className="flex gap-2">
-              <div className="flex">
-                <div className="flex pb-1 rounded-br-[20px] z-1">
-                  <button
-                    onClick={onClose}
-                    className="flex items-center justify-center p-3 bg-white rounded-full cursor-pointer"
-                    aria-label="Close modal">
-                    <Image src={cross} alt="Close" />
-                  </button>
+            <motion.div
+              className="relative w-full max-w-md"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={modalVariants}
+              transition={{ duration: 0.3 }}>
+              {/* Tab Headers & Close Button */}
+              <div className="flex gap-2">
+                <div className="flex">
+                  <div className="flex pb-1 rounded-br-[20px] z-1">
+                    <button
+                      onClick={onClose}
+                      className="flex items-center justify-center p-3 bg-white rounded-full cursor-pointer"
+                      aria-label="Close modal">
+                      <Image src={cross} alt="Close" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-[-4px]">
+                  <div className="relative flex mr-[4px]">
+                    <button
+                      type="button"
+                      onClick={() => handleTabSwitch("login")}
+                      className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
+                        activeTab === "login" ? "opacity-100" : "opacity-80"
+                      }`}>
+                      Авторизація
+                    </button>
+                  </div>
+                  <div className="relative flex ml-[-12px]">
+                    <button
+                      type="button"
+                      onClick={() => handleTabSwitch("register")}
+                      className={`auth-tab px-6 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
+                        activeTab === "register" ? "opacity-100" : "opacity-80"
+                      }`}>
+                      Реєстрація
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-[-4px]">
-                <div className="relative flex mr-[4px]">
+              {/* Modal Body */}
+              <div className="w-full bg-white p-6 rounded-[20px]">
+                <h2 className="text-lg font-semibold mb-4 text-center">
+                  {formConfigs[activeTab].title}
+                </h2>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-4">
+                    {formConfigs[activeTab].fields.map((field) => (
+                      <FormField
+                        key={field.id}
+                        label={field.label}
+                        id={field.id}
+                        name={field.name}
+                        type={field.type}
+                        value={field.value}
+                        onChange={handleInputChange}
+                        required={field.required}
+                        showRequiredIndicator={field.showRequiredIndicator}
+                      />
+                    ))}
+
+                    {/* Error */}
+                    {formConfigs[activeTab].message && (
+                      <AuthFeedback
+                        type={formConfigs[activeTab].message.type}
+                        message={formConfigs[activeTab].message.text}
+                      />
+                    )}
+                  </div>
+
+                  {/* Submit */}
                   <button
-                    type="button"
-                    onClick={() => handleTabSwitch("login")}
-                    className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
-                      activeTab === "login" ? "opacity-100" : "opacity-80"
-                    }`}>
-                    Авторизація
+                    type="submit"
+                    disabled={formConfigs[activeTab].isLoading}
+                    className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-[10px] px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer">
+                    {formConfigs[activeTab].isLoading ? (
+                      <div className="flex gap-2 items-center">
+                        <PuffLoader size={20} />
+                        {formConfigs[activeTab].button.loadingText}
+                      </div>
+                    ) : (
+                      formConfigs[activeTab].button.normalText
+                    )}
                   </button>
-                </div>
-                <div className="relative flex ml-[-12px]">
-                  <button
-                    type="button"
-                    onClick={() => handleTabSwitch("register")}
-                    className={`auth-tab px-6 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
-                      activeTab === "register" ? "opacity-100" : "opacity-80"
-                    }`}>
-                    Реєстрація
-                  </button>
-                </div>
+
+                  {/* Divider */}
+                  <div className="flex items-center my-4">
+                    <div className="flex-grow h-px bg-gray-300"></div>
+                    <span className="px-4 text-sm text-gray-500">або</span>
+                    <div className="flex-grow h-px bg-gray-300"></div>
+                  </div>
+
+                  {/* Google Sign-In Button */}
+                  <div className="flex justify-center">
+                    <GoogleAuthButton
+                      onSuccess={handleGoogleLoginSuccess}
+                      onError={handleGoogleLoginError}
+                      isLoading={isLoading.google}
+                      setIsLoading={(loading) =>
+                        setIsLoading((prev) => ({ ...prev, google: loading }))
+                      }
+                      googleLogin={googleLogin}
+                    />
+                  </div>
+                </form>
               </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="w-full bg-white p-6 rounded-[20px]">
-              <h2 className="text-lg font-semibold mb-4 text-center">
-                {formConfigs[activeTab].title}
-              </h2>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                <div className="flex flex-col gap-4">
-                  {formConfigs[activeTab].fields.map((field) => (
-                    <FormField
-                      key={field.id}
-                      label={field.label}
-                      id={field.id}
-                      name={field.name}
-                      type={field.type}
-                      value={field.value}
-                      onChange={handleInputChange}
-                      required={field.required}
-                      showRequiredIndicator={field.showRequiredIndicator}
-                    />
-                  ))}
-
-                  {/* Error */}
-                  {formConfigs[activeTab].message && (
-                    <AuthFeedback
-                      type={formConfigs[activeTab].message.type}
-                      message={formConfigs[activeTab].message.text}
-                    />
-                  )}
-                </div>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={formConfigs[activeTab].isLoading}
-                  className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-[10px] px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer">
-                  {formConfigs[activeTab].isLoading ? (
-                    <div className="flex gap-2 items-center">
-                      <PuffLoader size={20} />
-                      {formConfigs[activeTab].button.loadingText}
-                    </div>
-                  ) : (
-                    formConfigs[activeTab].button.normalText
-                  )}
-                </button>
-              </form>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 
   // Render modal in portal

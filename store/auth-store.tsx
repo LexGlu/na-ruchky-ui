@@ -1,7 +1,5 @@
 "use client";
 
-// TODO: Fix type errors or replace zustand with another state management library. This is a temporary workaround.
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "@/lib/types/user";
@@ -13,6 +11,7 @@ export interface AuthState {
   isLogoutModalOpen: boolean;
   isAuthModalOpen: boolean;
   login: (email: string, password: string) => Promise<void>;
+  googleLogin: (token: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setLoading: (loading: boolean) => void;
@@ -23,33 +22,75 @@ export interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       loading: true,
       isLogoutModalOpen: false,
       isAuthModalOpen: false,
+
       setLoading: (loading) => set({ loading }),
+
       setUser: (user) => set({ user }),
+
       login: async (email: string, password: string) => {
-        await authService.loginUser(email, password);
-        const user = await authService.fetchCurrentUser();
-        set({ user });
+        try {
+          set({ loading: true });
+          await authService.loginUser(email, password);
+          const user = await authService.fetchCurrentUser();
+          set({ user, loading: false });
+        } catch (error) {
+          set({ loading: false });
+          throw error;
+        }
       },
+
+      googleLogin: async (token: string) => {
+        try {
+          set({ loading: true });
+          await authService.googleLogin(token);
+          const user = await authService.fetchCurrentUser();
+          set({ user, loading: false });
+        } catch (error) {
+          set({ loading: false });
+          throw error;
+        }
+      },
+
       logout: async () => {
-        await authService.logoutUser();
-        set({ user: null });
+        try {
+          set({ loading: true });
+          await authService.logoutUser();
+          set({ user: null, loading: false });
+        } catch (error) {
+          set({ loading: false });
+          throw error;
+        }
       },
+
       refreshUser: async () => {
-        const user = await authService.fetchCurrentUser();
-        set({ user });
+        try {
+          if (!get().loading) set({ loading: true });
+          const user = await authService.fetchCurrentUser();
+          set({ user, loading: false });
+        } catch (error) {
+          set({ user: null, loading: false });
+        }
       },
-      setLogOutModalOpen: (isLogoutModalOpen: boolean) =>
-        set({ isLogoutModalOpen }),
-      setAuthModalOpen: (isAuthModalOpen: boolean) => set({ isAuthModalOpen }),
+
+      setLogOutModalOpen: (isLogoutModalOpen) => set({ isLogoutModalOpen }),
+
+      setAuthModalOpen: (isAuthModalOpen) => set({ isAuthModalOpen }),
     }),
     {
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        // Don't persist these state properties
+        // loading: state.loading,
+        // isLogoutModalOpen: state.isLogoutModalOpen,
+        // isAuthModalOpen: state.isAuthModalOpen,
+      }),
     }
   )
 );

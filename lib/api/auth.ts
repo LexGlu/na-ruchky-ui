@@ -81,6 +81,24 @@ class AuthService {
   }
 
   /**
+   * Authenticate user using Google OAuth token
+   * @param token Google OAuth access token
+   */
+  async googleLogin(token: string): Promise<void> {
+    try {
+      await safeFetch<{ message: string }>(
+        `${BASE_API_URL}/api/v1/auth/google-login`,
+        {
+          method: "POST",
+          body: JSON.stringify({ token }),
+        }
+      );
+    } catch (error) {
+      this.handleAuthError(error);
+    }
+  }
+
+  /**
    * Fetches the currently logged-in user.
    * @returns User object or null if not authenticated
    */
