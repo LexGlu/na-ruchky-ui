@@ -5,26 +5,39 @@ import { NewPetCardSkeleton } from "@/components/ui/skeletons/pets";
 import { fetchPetListings } from "@/lib/api/pets";
 import { PetListing } from "@/lib/types/pets";
 
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  SearchX,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 
 export default function NewPetListings() {
   const [newPets, setNewPets] = useState<PetListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
 
-  useEffect(() => {
-    async function fetchNewPets() {
-      try {
-        const listings = await fetchPetListings({ sort: "-created_at" });
-        setNewPets(listings.slice(0, 10));
-      } catch (error) {
-        console.error("Error fetching new pet listings:", error);
-      } finally {
-        setIsLoading(false);
-      }
+  const fetchNewPets = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const listings = await fetchPetListings({ sort: "-created_at" });
+      setNewPets(listings.slice(0, 10));
+    } catch (error) {
+      console.error("Error fetching new pet listings:", error);
+      setError("Не вдалося завантажити нові оголошення.");
+    } finally {
+      setIsLoading(false);
+      setIsRetrying(false);
     }
+  };
+
+  useEffect(() => {
     fetchNewPets();
   }, []);
 
@@ -61,6 +74,12 @@ export default function NewPetListings() {
     }
   };
 
+  const handleRetry = () => {
+    setIsRetrying(true);
+    fetchNewPets();
+  };
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="container bg-white rounded-[20px] py-8 px-4 my-1">
@@ -76,6 +95,61 @@ export default function NewPetListings() {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div className="container bg-white rounded-[20px] py-8 px-4 my-1">
+        <h2 className="text-2xl text-black mb-6">Нові оголошення</h2>
+        <div className="flex flex-col items-center justify-center py-8 px-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="bg-red-50 rounded-full p-4 mb-4">
+            <AlertCircle size={36} className="text-red-500" />
+          </div>
+          <h3 className="text-xl font-medium text-gray-800 mb-2">
+            Помилка завантаження
+          </h3>
+          <p className="text-gray-500 max-w-md mb-6 text-center">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+            disabled={isRetrying}>
+            {isRetrying ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Завантаження...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Спробувати ще раз
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - no pets
+  if (newPets.length === 0) {
+    return (
+      <div className="container bg-white rounded-[20px] py-8 px-4 my-1">
+        <h2 className="text-2xl text-black mb-6">Нові оголошення</h2>
+        <div className="flex flex-col items-center justify-center py-10 px-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="bg-gray-100 rounded-full p-6 mb-4">
+            <SearchX size={36} className="text-gray-400" />
+          </div>
+          <h3 className="text-xl font-medium text-gray-800 mb-2">
+            Наразі немає нових оголошень
+          </h3>
+          <p className="text-gray-500 max-w-md mb-2 text-center">
+            Заходьте пізніше або перегляньте наші поточні оголошення
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state with pets
   return (
     <div className="container bg-white rounded-[20px] py-8 px-4 my-1 relative">
       <h2 className="text-2xl text-black mb-6">Нові оголошення</h2>
