@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import Script from "next/script";
 
 import { GOOGLE_CLIENT_ID } from "@/lib/api/constants";
 
 import { PuffLoader } from "react-spinners";
 
-// Define interfaces for Google credential response
 interface GoogleCredentialResponse {
   credential: string;
 }
@@ -57,26 +56,27 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   const buttonRef = useRef<HTMLDivElement>(null);
   const googleInitialized = useRef<boolean>(false);
 
-  const handleGoogleCredentialResponse = async (
-    response: GoogleCredentialResponse
-  ) => {
-    try {
-      setIsLoading(true);
-      await googleLogin(response.credential);
-      onSuccess();
-    } catch (err: unknown) {
-      // Use type assertion to handle the error
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "An error occurred during Google sign-in.";
-      onError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleGoogleCredentialResponse = useCallback(
+    async (response: GoogleCredentialResponse) => {
+      try {
+        setIsLoading(true);
+        await googleLogin(response.credential);
+        onSuccess();
+      } catch (err: unknown) {
+        // Use type assertion to handle the error
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "An error occurred during Google sign-in.";
+        onError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [googleLogin, onError, onSuccess, setIsLoading]
+  );
 
-  const initializeGoogleOneTap = () => {
+  const initializeGoogleOneTap = useCallback(() => {
     if (
       typeof window !== "undefined" &&
       (window as WindowWithGoogle).google &&
@@ -84,7 +84,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
     ) {
       const googleAccounts = (window as WindowWithGoogle).google?.accounts;
 
-      if (googleAccounts) {
+      if (googleAccounts && !googleInitialized.current) {
         googleAccounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID!,
           callback: handleGoogleCredentialResponse,
@@ -96,20 +96,20 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
           theme: "outline",
           size: "large",
           text: "signin_with",
-          shape: "pill", // Making the button more rounded
+          shape: "pill",
           width: 260,
         });
 
         googleInitialized.current = true;
       }
     }
-  };
+  }, [handleGoogleCredentialResponse]);
 
   useEffect(() => {
     if ((window as WindowWithGoogle).google && !googleInitialized.current) {
       initializeGoogleOneTap();
     }
-  }, [initializeGoogleOneTap]); // Added missing dependency
+  }, [initializeGoogleOneTap]);
 
   return (
     <>

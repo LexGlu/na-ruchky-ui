@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PetListing } from "@/lib/types/pets";
@@ -10,12 +11,14 @@ import { getImageUrl } from "@/lib/utils/get-image-url";
 import petPlaceholder from "@/public/pet_placeholder.png";
 import telegramIcon from "@/public/icons/telegram.svg";
 import whatsapp from "@/public/icons/whatsapp.svg";
+import petCardLoader from "@/public/icons/pet-card-loader.svg";
 
 interface PetDetailProps {
   listing: PetListing;
 }
 
 export default function PetDetail({ listing }: PetDetailProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const { pet, title, price } = listing;
   const {
     name,
@@ -60,14 +63,33 @@ export default function PetDetail({ listing }: PetDetailProps) {
         {/* Image and Tags Section */}
         <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row gap-6 md:gap-10 order-1 md:order-2">
           <div className="w-full md:w-auto flex justify-center">
-            <Image
-              src={imageUrl}
-              alt={name}
-              width={404}
-              height={598}
-              className="object-contain rounded-3xl max-h-[350px] sm:max-h-[450px] md:max-h-[598px] w-auto"
-              priority
-            />
+            <div className="relative w-full max-w-md md:w-[404px] aspect-[2/3] rounded-3xl overflow-hidden">
+              {/* Skeleton Loader */}
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-3xl z-10">
+                  <div className="h-full w-full flex items-center justify-center">
+                    <Image
+                      src={petCardLoader}
+                      alt="Loading..."
+                      width={100}
+                      height={100}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Pet Image */}
+              <Image
+                src={imageUrl}
+                alt={name}
+                fill
+                sizes="(max-width: 768px) 100vw, 404px"
+                className="object-cover"
+                priority
+                onLoad={() => setImageLoaded(true)}
+                style={{ opacity: imageLoaded ? 1 : 0 }}
+              />
+            </div>
           </div>
           <div className="flex flex-col gap-6 md:gap-10">
             <div className="flex flex-wrap gap-[10px]">

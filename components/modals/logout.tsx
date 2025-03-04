@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Modal,
   ModalContent,
@@ -17,11 +17,11 @@ export default function LogOutModal() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (!isProcessing) {
       setLogOutModalOpen(false);
     }
-  };
+  }, [isProcessing, setLogOutModalOpen]);
 
   const handleLogout = async () => {
     setIsProcessing(true);
@@ -60,7 +60,7 @@ export default function LogOutModal() {
 
     window.addEventListener("keydown", handleEscapeKey);
     return () => window.removeEventListener("keydown", handleEscapeKey);
-  }, [isLogoutModalOpen, isProcessing]);
+  }, [handleClose, isLogoutModalOpen, isProcessing]);
 
   return (
     <Modal
