@@ -46,9 +46,20 @@ export default function PetCard({ listing }: PetCardProps) {
     location,
     is_vaccinated,
     profile_picture,
+    images = [],
   } = pet;
 
-  const imageUrl = getImageUrl(profile_picture) || petPlaceholder.src;
+  // Find the profile image from the pet's image array
+  const profileImageId = profile_picture;
+  const profileImage = images.find((img) => img.id === profileImageId);
+
+  // Determine the image URL - first try profile image, then first image from array, then fallback to placeholder
+  const imageUrl = profileImage
+    ? getImageUrl(profileImage.image)
+    : images.length > 0
+    ? getImageUrl(images[0].image)
+    : petPlaceholder.src;
+
   const [isLoadingImage, setIsLoadingImage] = useState(true);
 
   return (

@@ -28,6 +28,18 @@ export const PetSocialLink = z.object({
 export type PetSocialLink = z.infer<typeof PetSocialLink>;
 
 /**
+ * PetImage
+ */
+export const PetImage = z.object({
+  id: z.string(),
+  image: z.string(),
+  order: z.number(),
+  caption: z.string().nullable(),
+  created_at: z.string(),
+});
+export type PetImage = z.infer<typeof PetImage>;
+
+/**
  * Pet
  */
 export const Pet = z.object({
@@ -42,10 +54,11 @@ export const Pet = z.object({
   short_description: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   health: z.string().nullable().optional(),
-  profile_picture: z.string().nullable().optional(),
+  profile_picture: z.string().nullable().optional(), // This will be the ID of the profile image
   owner: z.any(),
   tags: z.array(z.string()).optional(),
   social_links: z.array(PetSocialLink).optional(),
+  images: z.array(PetImage).optional(),
 });
 export type Pet = z.infer<typeof Pet>;
 

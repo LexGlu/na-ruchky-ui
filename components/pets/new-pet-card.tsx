@@ -17,6 +17,17 @@ export default function EnhancedPetCard({ pet }: PetCardProps) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Find the profile image from the pet's image array
+  const profileImageId = pet.pet.profile_picture;
+  const profileImage = pet.pet.images?.find((img) => img.id === profileImageId);
+
+  // Determine the image URL - first try profile image, then first image from array, then fallback to placeholder
+  const imageUrl = profileImage
+    ? getImageUrl(profileImage.image)
+    : pet.pet.images && pet.pet.images.length > 0
+    ? getImageUrl(pet.pet.images[0].image)
+    : petPlaceholder.src;
+
   // Track mouse position relative to card
   const handleMouseMove = (e: React.MouseEvent) => {
     if (cardRef.current) {
@@ -73,7 +84,7 @@ export default function EnhancedPetCard({ pet }: PetCardProps) {
             imageLoaded ? "opacity-100" : "opacity-0"
           }`}>
           <Image
-            src={getImageUrl(pet.pet.profile_picture) || petPlaceholder.src}
+            src={imageUrl}
             alt={pet.pet.name}
             fill
             sizes="220px"

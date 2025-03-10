@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PetListing } from "@/lib/types/pets";
+import { PetListing, PetImage } from "@/lib/types/pets";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
 import { getImageUrl } from "@/lib/utils/get-image-url";
@@ -19,6 +19,7 @@ interface PetDetailProps {
 
 export default function PetDetail({ listing }: PetDetailProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { pet, title, price } = listing;
   const {
     name,
@@ -28,9 +29,27 @@ export default function PetDetail({ listing }: PetDetailProps) {
     location,
     profile_picture,
     tags,
+    images = [],
   } = pet;
 
-  const imageUrl = getImageUrl(profile_picture) || petPlaceholder.src;
+  // Find profile image or default to first image
+  const profileImageId = profile_picture;
+  const profileImage = images.find((img) => img.id === profileImageId);
+
+  // Arrange images with profile image first, then the rest
+  const arrangedImages = [...images].sort((a, b) => {
+    if (a.id === profileImageId) return -1;
+    if (b.id === profileImageId) return 1;
+    return a.order - b.order;
+  });
+
+  // Get current image or fallback to placeholder
+  const currentImage = arrangedImages[currentImageIndex] || null;
+  const imageUrl = currentImage
+    ? getImageUrl(currentImage.image)
+    : profileImage
+    ? getImageUrl(profileImage.image)
+    : petPlaceholder.src;
 
   return (
     <div className="w-full mx-auto text-black flex flex-col gap-1">
@@ -62,7 +81,7 @@ export default function PetDetail({ listing }: PetDetailProps) {
 
         {/* Image and Tags Section */}
         <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row gap-6 md:gap-10 order-1 md:order-2">
-          <div className="w-full md:w-auto flex justify-center">
+          <div className="w-full md:w-auto flex flex-col justify-center gap-3">
             <div className="relative w-full max-w-md md:w-[404px] aspect-[2/3] rounded-3xl overflow-hidden">
               {/* Skeleton Loader */}
               {!imageLoaded && (
@@ -81,7 +100,7 @@ export default function PetDetail({ listing }: PetDetailProps) {
               {/* Pet Image */}
               <Image
                 src={imageUrl}
-                alt={name}
+                alt={currentImage?.caption || name}
                 fill
                 sizes="(max-width: 768px) 100vw, 404px"
                 className="object-cover"
@@ -90,7 +109,35 @@ export default function PetDetail({ listing }: PetDetailProps) {
                 style={{ opacity: imageLoaded ? 1 : 0 }}
               />
             </div>
+
+            {/* Image Thumbnails */}
+            {arrangedImages.length > 1 && (
+              <div className="flex justify-center gap-2 overflow-x-auto py-2">
+                {arrangedImages.map((img, index) => (
+                  <button
+                    key={img.id}
+                    onClick={() => {
+                      setCurrentImageIndex(index);
+                      setImageLoaded(false);
+                    }}
+                    className={`relative h-16 w-16 rounded-md overflow-hidden border-2 cursor-pointer ${
+                      index === currentImageIndex
+                        ? "border-[#ABE34D]"
+                        : "border-transparent"
+                    }`}>
+                    <Image
+                      src={getImageUrl(img.image)}
+                      alt={img.caption || `${name} photo ${index + 1}`}
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
           <div className="flex flex-col gap-6 md:gap-10">
             <div className="flex flex-wrap gap-[10px]">
               {tags?.map((tag) => (
