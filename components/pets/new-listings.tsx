@@ -129,8 +129,8 @@ function NewPetListingsSkeleton() {
 
 export default function NewPetListings() {
   return (
-    <div className="container bg-white rounded-[20px] py-8 px-4 my-1">
-      <h2 className="text-2xl text-black mb-6">Нові оголошення</h2>
+    <div className="container bg-white rounded-[20px] px-4 my-1">
+      <h2 className="text-3xl font-bold text-black mb-6">Нові оголошення</h2>
       <NewPetListingsContent />
     </div>
   );

@@ -21,8 +21,10 @@ export default function Header() {
   const closeMobileNav = () => setIsMobileOpen(false);
 
   return (
-    <header className="bg-white shadow-sm p-1 m-1 rounded-[20px]" role="banner">
-      <div className="px-4 sm:px-6 lg:px-8">
+    <header
+      className="bg-white shadow-sm p-2 mb-1 rounded-[20px]"
+      role="banner">
+      <div className="px-1 sm:px-2">
         <div className="flex h-16 items-center justify-between">
           {/* Brand logo/title */}
           <Brand title="Na.ruchky" />

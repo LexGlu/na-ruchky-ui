@@ -23,7 +23,7 @@ function PetsFilter() {
   } = usePetsFilter();
 
   return (
-    <div className="flex flex-col text-black gap-8">
+    <div className="flex flex-col text-black py-8 gap-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row gap-8">
         <div className="md:w-1/2">

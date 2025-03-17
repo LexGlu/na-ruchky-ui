@@ -7,7 +7,8 @@ import Link from "next/link";
 
 import { Species } from "@/lib/types/pets";
 
-import { Search, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
+import CircleArrowDown from "@/public/icons/circle-arrow-down.svg";
 import heart from "@/public/icons/heart-syringe.svg";
 
 type SearchCategory = {
@@ -18,7 +19,7 @@ type SearchCategory = {
 
 export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [showCategories, setShowCategories] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<SearchCategory>({
     value: "all",
     label: "Знайдіть свого працівника щастя",
@@ -43,7 +44,7 @@ export default function SearchBar() {
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
       ) {
-        setShowCategories(false);
+        setIsDropdownOpen(false);
       }
     }
 
@@ -56,8 +57,12 @@ export default function SearchBar() {
   // Handle keyboard accessibility for dropdown
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
-      setShowCategories(false);
+      setIsDropdownOpen(false);
     }
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen((prevState) => !prevState);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -78,11 +83,11 @@ export default function SearchBar() {
 
   const selectCategory = (category: SearchCategory) => {
     setSelectedCategory(category);
-    setShowCategories(false);
+    setIsDropdownOpen(false);
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto relative z-10">
+    <div className="w-full max-w-6xl mx-auto relative z-10">
       <div className="flex flex-col md:flex-row gap-2">
         {/* Category dropdown */}
         <div
@@ -90,10 +95,10 @@ export default function SearchBar() {
           ref={dropdownRef}>
           <button
             type="button"
-            onClick={() => setShowCategories(!showCategories)}
+            onClick={toggleDropdown}
             className="w-full pl-10 pr-10 py-3 rounded-full bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-lime-300 cursor-pointer text-left hover:bg-gray-50"
             aria-haspopup="true"
-            aria-expanded={showCategories}
+            aria-expanded={isDropdownOpen}
             aria-label="Select search category"
             onKeyDown={handleKeyDown}>
             <span className="truncate block">{selectedCategory.label}</span>
@@ -104,11 +109,19 @@ export default function SearchBar() {
           </div>
 
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none">
-            <ChevronDown className="h-5 w-5" />
+            <Image
+              src={CircleArrowDown}
+              sizes="16"
+              className={`transition-transform duration-300 ${
+                isDropdownOpen ? "rotate-180" : ""
+              }`}
+              alt="circle-arrow-down icon"
+              aria-hidden="true"
+            />
           </div>
 
           {/* Dropdown menu */}
-          {showCategories && (
+          {isDropdownOpen && (
             <div
               ref={categoriesRef}
               className="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-20 overflow-hidden"
@@ -137,11 +150,19 @@ export default function SearchBar() {
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
-              placeholder={`Пошук ${
-                selectedCategory.value !== "all"
-                  ? selectedCategory.label.toLowerCase()
-                  : ""
-              }`}
+              placeholder={
+                selectedCategory.value === "all"
+                  ? "Пошук улюбленців, притулків та послуг"
+                  : selectedCategory.value === "dog"
+                  ? "Пошук собак"
+                  : selectedCategory.value === "cat"
+                  ? "Пошук котів"
+                  : selectedCategory.value === "shelter"
+                  ? "Пошук притулків"
+                  : selectedCategory.value === "services"
+                  ? "Пошук послуг"
+                  : "Пошук"
+              }
               className="w-full px-4 py-3 rounded-full bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-lime-300"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

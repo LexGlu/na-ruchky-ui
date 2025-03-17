@@ -27,7 +27,7 @@ function BreedsContent() {
   useEffect(() => {
     async function fetchBreeds() {
       try {
-        const data = await getBreeds({ limit: 100 });
+        const data = await getBreeds({ limit: 50 });
         setBreeds(data.items || []);
       } catch (error) {
         console.error("Error fetching breeds:", error);

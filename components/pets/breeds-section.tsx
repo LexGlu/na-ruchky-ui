@@ -10,20 +10,27 @@ import { PawPrint, ChevronLeft, ChevronRight } from "lucide-react";
 import { Species } from "@/lib/types/pets";
 
 export default function BreedsSection() {
-  const [breeds, setBreeds] = useState<Breed[]>([]);
   const [filteredBreeds, setFilteredBreeds] = useState<Breed[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSpecies, setActiveSpecies] = useState<Species | "all">("all");
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch all breeds on component mount
+  // Fetch all breeds on component mount or when species filter changes
   useEffect(() => {
     async function fetchBreeds() {
       try {
-        const data = await getBreeds({ limit: 50 });
-        setBreeds(data.items || []);
-        setFilteredBreeds(data.items || []);
+        setLoading(true);
+        // Only pass species parameter if it's not "all"
+        const params =
+          activeSpecies !== "all" ? { species: activeSpecies } : {};
+        const data = await getBreeds({ ...params, limit: 20 });
+
+        if (data.items && data.items.length > 0) {
+          setFilteredBreeds(data.items);
+        } else {
+          console.warn("No breeds returned from API");
+        }
       } catch (error) {
         console.error("Error fetching breeds:", error);
       } finally {
@@ -32,23 +39,12 @@ export default function BreedsSection() {
     }
 
     fetchBreeds();
-  }, []);
-
-  // Apply filters when species changes
-  useEffect(() => {
-    if (activeSpecies === "all") {
-      setFilteredBreeds(breeds);
-    } else {
-      setFilteredBreeds(
-        breeds.filter((breed) => breed.species === activeSpecies)
-      );
-    }
 
     // Reset scroll position when filters change
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollLeft = 0;
     }
-  }, [activeSpecies, breeds]);
+  }, [activeSpecies]);
 
   // Scroll functions
   const scroll = (direction: "left" | "right") => {
@@ -76,7 +72,7 @@ export default function BreedsSection() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-        <h2 className="text-xl font-bold">Породи</h2>
+        <h2 className="text-3xl font-bold">Породи</h2>
 
         <div className="flex items-center gap-2">
           {/* Species filter buttons */}
@@ -144,7 +140,7 @@ export default function BreedsSection() {
           {/* Scrollable container */}
           <div
             ref={scrollContainerRef}
-            className="flex overflow-x-auto pb-6 gap-2 hide-scrollbar snap-x"
+            className="flex overflow-x-auto pb-6 gap-4 hide-scrollbar snap-x"
             style={{ scrollbarWidth: "none" }}
             aria-label="Breed categories"
             tabIndex={0}
@@ -153,18 +149,18 @@ export default function BreedsSection() {
               <Link
                 key={breed.id}
                 href={`/breeds/${breed.id}`}
-                className="bg-[#D5EBF1] rounded-[43px] p-3 flex flex-col justify-between min-w-[188px] min-h-[184px] flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all outline-none"
+                className="bg-[#D5EBF1] rounded-[43px] p-3 flex flex-col items-center w-[188px] h-[208px] flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all outline-none"
                 aria-label={`${breed.name} - ${
                   breed.species === "dog" ? "Собака" : "Кіт"
                 }`}>
-                <div className="relative w-full h-[80%] aspect-square mx-auto mb-2 overflow-hidden rounded-full flex items-center justify-center bg-white">
+                <div className="relative w-[140px] h-[140px] overflow-hidden rounded-full flex items-center justify-center bg-white">
                   {breed.image_url ? (
                     <Image
                       src={getImageUrl(breed.image_url)}
                       alt=""
                       fill
                       className="object-cover"
-                      sizes="(max-width: 160px) 80px, 120px"
+                      sizes="140px"
                     />
                   ) : (
                     <PawPrint
@@ -173,9 +169,11 @@ export default function BreedsSection() {
                     />
                   )}
                 </div>
-                <span className="text-sm font-medium line-clamp-1 mt-auto text-center w-full">
-                  {breed.name}
-                </span>
+                <div className="w-full h-[44px] flex items-center justify-center mt-2 px-2">
+                  <span className="text-sm font-medium text-center overflow-hidden text-ellipsis whitespace-nowrap w-full">
+                    {breed.name}
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
