@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PetListing, PetImage } from "@/lib/types/pets";
+import { PetListing } from "@/lib/types/pets";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
 import { getImageUrl } from "@/lib/utils/get-image-url";

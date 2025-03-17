@@ -24,8 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geologica.className} antialiased max-w-[1440px] mx-auto`}
-      >
+        className={`${geologica.className} antialiased max-w-[1440px] mx-auto`}>
         <Header />
         {children}
         <Footer />

@@ -38,7 +38,7 @@ export default function PetCard({ listing }: PetCardProps) {
   const { id, pet, title, price } = listing;
   const {
     name,
-    breed,
+    breed_name,
     sex,
     birth_date,
     short_description,
@@ -92,7 +92,7 @@ export default function PetCard({ listing }: PetCardProps) {
       <HoverState
         title={title}
         name={name}
-        breed={breed}
+        breedName={breed_name}
         sex={sex}
         birthDate={birth_date}
         description={short_description}
@@ -175,7 +175,7 @@ interface HoverStateProps {
   title: string;
   name: string;
   profilePicture: string;
-  breed?: string | null;
+  breedName?: string | null;
   sex?: string | null;
   birthDate?: string | null;
   description?: string | null;
@@ -185,7 +185,7 @@ interface HoverStateProps {
 function HoverState({
   title,
   name,
-  breed,
+  breedName,
   sex,
   birthDate,
   description,
@@ -245,7 +245,7 @@ function HoverState({
         <hr className="text-white opacity-25 my-4" />
         <div className="flex flex-col gap-1">
           <span className="font-light text-white">
-            {breed || "Невідома порода"}
+            {breedName || "Невідома порода"}
           </span>
           <span className="font-light text-white">
             {description || descriptionPlaceholder}
