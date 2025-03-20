@@ -18,11 +18,11 @@ export class PetListingError extends Error {
 /**
  * Fetch pet listings with optional filtering parameters
  * @param searchParams URLSearchParams or Record<string, string> object for filtering results
- * @returns Promise containing an array of pet listings
+ * @returns Promise containing the complete response with items and count
  */
 export async function fetchPetListings(
   searchParams?: URLSearchParams | Record<string, string>
-): Promise<PetListing[]> {
+): Promise<PetListingArrayResponse> {
   try {
     let queryString = "";
 
@@ -51,7 +51,7 @@ export async function fetchPetListings(
       next: { revalidate: 30 },
     });
 
-    return data.items;
+    return data;
   } catch (error) {
     if (error instanceof Error) {
       throw new PetListingError(

@@ -15,12 +15,12 @@ export function useNewPetListings() {
     try {
       setIsLoading(true);
       setError(null);
-      // Create searchParams for newest listings
       const searchParams = new URLSearchParams();
       searchParams.append("sort", "-created_at");
+      searchParams.append("limit", "10");
 
-      const listings = await fetchPetListings(searchParams);
-      setNewPets(listings.slice(0, 10));
+      const response = await fetchPetListings(searchParams);
+      setNewPets(response.items);
     } catch (error) {
       console.error("Error fetching new pet listings:", error);
       setError("Не вдалося завантажити нові оголошення.");

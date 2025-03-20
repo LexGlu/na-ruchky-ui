@@ -16,11 +16,16 @@ import petCardLoader from "@/public/icons/pet-card-loader.svg";
 
 interface PetCardProps {
   listing: PetListing;
+  isDouble?: boolean;
+  className?: string;
 }
 
-function Skeleton() {
+function Skeleton({ isDouble }: { isDouble?: boolean }) {
   return (
-    <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-xl overflow-hidden">
+    <div
+      className={`absolute inset-0 bg-gray-200 animate-pulse rounded-xl overflow-hidden ${
+        isDouble ? "h-full" : ""
+      }`}>
       {/* Skeleton Loader (paw icon) */}
       <div className="h-full w-full flex items-center justify-center">
         <Image
@@ -34,7 +39,11 @@ function Skeleton() {
   );
 }
 
-export default function PetCard({ listing }: PetCardProps) {
+export default function PetCard({
+  listing,
+  isDouble = false,
+  className = "",
+}: PetCardProps) {
   const { id, pet, title, price } = listing;
   const {
     name,
@@ -66,8 +75,10 @@ export default function PetCard({ listing }: PetCardProps) {
     <Link
       href={`/listings/${id}`}
       passHref
-      className="relative group w-full sm:w-[270px] h-[401px] overflow-hidden rounded-xl">
-      {isLoadingImage && <Skeleton />}
+      className={`relative group ${
+        isDouble ? "sm:col-span-2 h-[401px]" : "w-full sm:w-[270px] h-[401px]"
+      } overflow-hidden rounded-xl ${className}`}>
+      {isLoadingImage && <Skeleton isDouble={isDouble} />}
       <Image
         src={imageUrl}
         alt={name}
@@ -75,7 +86,11 @@ export default function PetCard({ listing }: PetCardProps) {
         className={`object-cover ${
           isLoadingImage ? "opacity-0" : "opacity-100"
         }`}
-        sizes="(max-width: 640px) 100vw, 270px"
+        sizes={
+          isDouble
+            ? "(max-width: 640px) 100vw, 540px"
+            : "(max-width: 640px) 100vw, 270px"
+        }
         priority
         onLoadingComplete={() => setIsLoadingImage(false)}
       />
@@ -99,6 +114,7 @@ export default function PetCard({ listing }: PetCardProps) {
         health={health}
         isVaccinated={is_vaccinated}
         profilePicture={imageUrl}
+        isDouble={isDouble}
       />
     </Link>
   );
@@ -159,9 +175,7 @@ function NormalState({
           <span className="text-black font-medium">{ageText}</span>
         </div>
         <div className="flex items-center bg-white py-[4px] px-[6px] rounded-lg">
-          <span className="text-black font-medium">
-            {location || "Невідомо"}
-          </span>
+          <span className="text-black font-medium">{location || "Київ"}</span>
         </div>
       </div>
     </div>
@@ -181,6 +195,7 @@ interface HoverStateProps {
   description?: string | null;
   health?: string | null;
   isVaccinated?: boolean;
+  isDouble?: boolean;
 }
 function HoverState({
   title,
@@ -192,6 +207,7 @@ function HoverState({
   health,
   isVaccinated,
   profilePicture,
+  isDouble = false,
 }: HoverStateProps) {
   const descriptionPlaceholder = "Це чудо чекає саме тебе!";
   const ageText = formatAge(birthDate ?? null);
@@ -201,18 +217,22 @@ function HoverState({
     <div className="absolute inset-0 bg-[#717171] text-white px-4 py-5 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between">
       <div>
         <h3 className="text-2xl mb-5 leading-tight">{title}</h3>
-        <div className="flex gap-2.5">
-          <div className="w-1/2">
+        <div className={`flex gap-2.5 ${isDouble ? "items-start" : ""}`}>
+          <div className={isDouble ? "w-1/3" : "w-1/2"}>
             <Image
               className="rounded-[10px]"
               src={profilePicture}
               alt={name}
-              width={120}
-              height={120}
+              width={isDouble ? 180 : 120}
+              height={isDouble ? 180 : 120}
+              style={{ objectFit: "cover" }}
               priority
             />
           </div>
-          <div className="flex flex-col justify-between w-1/2">
+          <div
+            className={`flex flex-col justify-between ${
+              isDouble ? "w-2/3" : "w-1/2"
+            }`}>
             <div className="flex items-center gap-3 mb-2">
               {health && (
                 <Image

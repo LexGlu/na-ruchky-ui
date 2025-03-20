@@ -2,18 +2,31 @@ import { useState, useEffect, useCallback } from "react";
 import { fetchPetListings, PetListingError } from "@/lib/api/pets";
 import { PetListing } from "@/lib/types/pets";
 
+interface UsePetListingsResult {
+  petListings: PetListing[];
+  isLoading: boolean;
+  isRetrying: boolean;
+  error: string | null;
+  refreshPetListings: () => Promise<void>;
+  totalCount: number;
+  fetchPetListings: () => Promise<void>;
+}
+
 /**
  * Custom hook to fetch and manage pet listings
  * @param searchParams URLSearchParams object for filtering results
  * @returns Object containing pet listings, loading state, error information, and refresh function
  */
-export function usePetListings(searchParams: URLSearchParams) {
+export function usePetListings(
+  searchParams: URLSearchParams
+): UsePetListingsResult {
   const [petListings, setPetListings] = useState<PetListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const loadPetListings = useCallback(
+  const fetchPetListingsData = useCallback(
     async (isRetry = false) => {
       if (isRetry) {
         setIsRetrying(true);
@@ -23,8 +36,9 @@ export function usePetListings(searchParams: URLSearchParams) {
       setError(null);
 
       try {
-        const listings = await fetchPetListings(searchParams);
-        setPetListings(listings);
+        const response = await fetchPetListings(searchParams);
+        setPetListings(response.items);
+        setTotalCount(response.count);
       } catch (err) {
         const errorMessage =
           err instanceof PetListingError
@@ -40,12 +54,12 @@ export function usePetListings(searchParams: URLSearchParams) {
   );
 
   useEffect(() => {
-    loadPetListings();
-  }, [loadPetListings]);
+    fetchPetListingsData();
+  }, [fetchPetListingsData]);
 
   const refreshPetListings = useCallback(() => {
-    return loadPetListings(true);
-  }, [loadPetListings]);
+    return fetchPetListingsData(true);
+  }, [fetchPetListingsData]);
 
   return {
     petListings,
@@ -53,5 +67,7 @@ export function usePetListings(searchParams: URLSearchParams) {
     isRetrying,
     error,
     refreshPetListings,
+    totalCount,
+    fetchPetListings: fetchPetListingsData,
   };
 }
