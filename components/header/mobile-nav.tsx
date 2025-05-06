@@ -23,7 +23,7 @@ export default function MobileNav({
   return (
     <div
       className={`
-        md:hidden bg-transparent shadow-sm
+        md:hidden bg-transparent
         transition-all duration-300 ease-in-out
         ${isOpen ? "max-h-[500px]" : "max-h-0"}
         overflow-hidden

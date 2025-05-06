@@ -87,7 +87,8 @@ const FilterDropdown = memo(
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-label={`Select ${name} option`}
-          onKeyDown={handleKeyDown}>
+          onKeyDown={handleKeyDown}
+        >
           <span className="truncate block">{selectedValue}</span>
         </button>
         {icon && (
@@ -120,7 +121,8 @@ const FilterDropdown = memo(
             <ul
               role="listbox"
               aria-label={`${name} options`}
-              className="overflow-visible">
+              className="overflow-visible"
+            >
               {options.map((option) => (
                 <li
                   key={option.id}
@@ -141,7 +143,8 @@ const FilterDropdown = memo(
                       handleOptionSelect(option.label);
                       onToggle();
                     }
-                  }}>
+                  }}
+                >
                   {option.label}
                 </li>
               ))}
@@ -181,7 +184,8 @@ const CategoryTab = memo(
       }`}
       role="tab"
       tabIndex={0}
-      type="button">
+      type="button"
+    >
       {label}
     </button>
   )
@@ -211,14 +215,17 @@ const VaccinationCheckbox = memo(
           peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-lime-300
         `}
           onClick={onChange}
-          role="presentation">
+          role="presentation"
+        >
           {checked && (
             <Check size={14} className="text-white" strokeWidth={3} />
           )}
         </div>
         <label
           htmlFor="vaccinations"
-          className="ml-2 block text-sm text-gray-900 cursor-pointer">
+          className="ml-2 block text-sm text-gray-900 cursor-pointer"
+          id="vaccination-label"
+        >
           Наявні усі щеплення
         </label>
       </div>
@@ -394,7 +401,8 @@ export default function SearchBar() {
           onClick={handleSearch}
           className="py-3 px-8 bg-black text-white leading-none rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors cursor-pointer"
           aria-label="Search for pets"
-          type="button">
+          type="button"
+        >
           Пошук
         </button>
       </div>

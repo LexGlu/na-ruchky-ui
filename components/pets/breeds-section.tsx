@@ -3,192 +3,226 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+
+import { PawPrint } from "lucide-react";
+
 import { Breed } from "@/lib/types/breeds";
 import { getBreeds } from "@/lib/services/breeds-service";
 import { getImageUrl } from "@/lib/utils/get-image-url";
-import { PawPrint, ChevronLeft, ChevronRight } from "lucide-react";
 import { Species } from "@/lib/types/pets";
 
 export default function BreedsSection() {
-  const [filteredBreeds, setFilteredBreeds] = useState<Breed[]>([]);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSpecies, setActiveSpecies] = useState<Species | "all">("all");
+  const [hoveredBreedId, setHoveredBreedId] = useState<string | null>(null);
+
+  // State for breed counts - to be fetched from backend (currently hardcoded placeholders)
+  const [dogCount, setDogCount] = useState<number | null>(null);
+  const [catCount, setCatCount] = useState<number | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch all breeds on component mount or when species filter changes
   useEffect(() => {
-    async function fetchBreeds() {
+    setDogCount(120);
+    setCatCount(93);
+  }, []);
+
+  useEffect(() => {
+    async function fetchBreedsData() {
       try {
         setLoading(true);
-        // Only pass species parameter if it's not "all"
         const params =
           activeSpecies !== "all" ? { species: activeSpecies } : {};
-        const data = await getBreeds({ ...params, limit: 20 });
+        const data = await getBreeds({ ...params, limit: 6 });
 
-        if (data.items && data.items.length > 0) {
-          setFilteredBreeds(data.items);
+        if (data.items) {
+          setBreeds(data.items as Breed[]);
         } else {
-          console.warn("No breeds returned from API");
+          console.warn("No breeds returned or data.items is undefined");
+          setBreeds([]);
         }
       } catch (error) {
         console.error("Error fetching breeds:", error);
+        setBreeds([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchBreeds();
+    fetchBreedsData();
 
-    // Reset scroll position when filters change
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollLeft = 0;
     }
   }, [activeSpecies]);
 
-  // Scroll functions
   const scroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return;
+    // Scroll by approx 2.5 card widths for better UX with larger cards
+    const cardWidth = 215 + 16;
+    const scrollAmount = cardWidth * 2.5;
+    scrollContainerRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
 
-    const scrollAmount = 300;
-    const container = scrollContainerRef.current;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowLeft") scroll("left");
+    if (e.key === "ArrowRight") scroll("right");
+  };
 
-    if (direction === "left") {
-      container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+  const handleFilterClick = (species: Species | "all") => {
+    if (activeSpecies === species && species !== "all") {
+      setActiveSpecies("all");
     } else {
-      container.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      setActiveSpecies(species);
     }
   };
 
-  // Keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "ArrowLeft") {
-      scroll("left");
-    } else if (e.key === "ArrowRight") {
-      scroll("right");
-    }
+  const getFilterButtonStyle = (
+    filterSpecies: Species | "all",
+    count: number | null
+  ) => {
+    const isActive = activeSpecies === filterSpecies;
+    let buttonText = "";
+    if (filterSpecies === "dog") buttonText = "Собаки";
+    else if (filterSpecies === "cat") buttonText = "Кішки";
+
+    return (
+      <button
+        onClick={() => handleFilterClick(filterSpecies as Species)} // 'all' case handled by lack of this button type
+        className={`px-5 py-3 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-opacity-75 min-w-[150px] sm:min-w-[180px] md:min-w-[200px] border cursor-pointer
+                    ${
+                      isActive
+                        ? "bg-black text-white border-black shadow-md" // Active state based on screenshot's feel
+                        : "bg-white text-black border-gray-300 hover:border-black hover:shadow-sm"
+                    }`}
+        aria-pressed={isActive}
+      >
+        {buttonText} {count !== null ? `(${count})` : ""}
+      </button>
+    );
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-        <h2 className="text-3xl font-bold">Породи</h2>
-
-        <div className="flex items-center gap-2">
-          {/* Species filter buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveSpecies("all")}
-              className={`px-3 py-1 rounded-full text-sm transition-colors cursor-pointer ${
-                activeSpecies === "all"
-                  ? "bg-lime-500 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
-              aria-pressed={activeSpecies === "all"}>
-              Всі
-            </button>
-            <button
-              onClick={() => setActiveSpecies("dog")}
-              className={`px-3 py-1 rounded-full text-sm transition-colors cursor-pointer ${
-                activeSpecies === "dog"
-                  ? "bg-lime-500 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
-              aria-pressed={activeSpecies === "dog"}>
-              Собаки
-            </button>
-            <button
-              onClick={() => setActiveSpecies("cat")}
-              className={`px-3 py-1 rounded-full text-sm transition-colors cursor-pointer ${
-                activeSpecies === "cat"
-                  ? "bg-lime-500 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
-              aria-pressed={activeSpecies === "cat"}>
-              Коти
-            </button>
+    <section className="bg-white rounded-2xl md:rounded-[24px] p-2 sm:p-4 md:p-6 lg:p-8 w-full max-w-[1432px] mx-auto">
+      <div className="w-full max-w-[1336px] mx-auto flex flex-col gap-8 md:gap-10">
+        <div className="flex flex-col lg:flex-row justify-between lg:items-start gap-6 lg:gap-10">
+          <div className="lg:max-w-[500px] xl:max-w-[530px]">
+            <h2
+              className="font-geologica font-semibold text-4xl sm:text-5xl leading-tight
+                         md:text-6xl md:leading-tight 
+                         lg:text-[80px] lg:leading-[1em] text-black"
+            >
+              Кожен на&nbsp;своєму місці
+            </h2>
           </div>
 
-          {/* Navigation arrows */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => scroll("left")}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
-              aria-label="Scroll left">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
-              aria-label="Scroll right">
-              <ChevronRight className="h-4 w-4" />
-            </button>
+          <div className="flex flex-col gap-6 lg:gap-8 lg:max-w-[664px] lg:pt-2 flex-grow">
+            <p className="font-geologica text-sm sm:text-base md:text-lg leading-relaxed text-black/80">
+              Кожна тваринка має свій характер. Оберіть компаньйона, що ідеально
+              доповнить ваш стиль життя.
+            </p>
+            <div className="flex flex-row justify-start items-center gap-3 sm:gap-4">
+              {getFilterButtonStyle("dog", dogCount)}
+              {getFilterButtonStyle("cat", catCount)}
+            </div>
           </div>
         </div>
-      </div>
 
-      {loading ? (
-        <div className="flex justify-center py-4 bg-gray-50 rounded-lg">
-          <div className="animate-spin w-6 h-6 border-2 border-lime-500 border-t-transparent rounded-full"></div>
-        </div>
-      ) : filteredBreeds.length === 0 ? (
-        <div className="text-center py-6 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">Порід не знайдено</p>
-        </div>
-      ) : (
         <div className="relative">
-          {/* Scrollable container */}
-          <div
-            ref={scrollContainerRef}
-            className="flex overflow-x-auto pb-6 gap-4 hide-scrollbar snap-x"
-            style={{ scrollbarWidth: "none" }}
-            aria-label="Breed categories"
-            tabIndex={0}
-            onKeyDown={handleKeyDown}>
-            {filteredBreeds.map((breed) => (
-              <Link
-                key={breed.id}
-                href={`/breeds/${breed.id}`}
-                className="bg-[#D5EBF1] rounded-[43px] p-3 flex flex-col items-center w-[188px] h-[208px] flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all outline-none"
-                aria-label={`${breed.name} - ${
-                  breed.species === "dog" ? "Собака" : "Кіт"
-                }`}>
-                <div className="relative w-[140px] h-[140px] overflow-hidden rounded-full flex items-center justify-center bg-white">
-                  {breed.image_url ? (
-                    <Image
-                      src={getImageUrl(breed.image_url)}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="140px"
-                    />
-                  ) : (
-                    <PawPrint
-                      className="h-10 w-10 text-gray-400"
-                      aria-hidden="true"
-                    />
-                  )}
-                </div>
-                <div className="w-full h-[44px] flex items-center justify-center mt-2 px-2">
-                  <span className="text-sm font-medium text-center overflow-hidden text-ellipsis whitespace-nowrap w-full">
-                    {breed.name}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+          {loading ? (
+            <div className="flex justify-center items-center min-h-[320px] bg-gray-50 rounded-lg">
+              <div className="animate-spin w-8 h-8 border-4 border-lime-500 border-t-transparent rounded-full"></div>
+            </div>
+          ) : breeds.length === 0 ? (
+            <div className="text-center py-12 min-h-[320px] bg-gray-50 rounded-lg">
+              <PawPrint className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg font-semibold">
+                Породи не знайдено
+              </p>
+              <p className="text-gray-400 text-sm mt-1">
+                Спробуйте змінити фільтри або зазирніть пізніше.
+              </p>
+            </div>
+          ) : (
+            <div
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto pb-4 pt-2 gap-[9px] hide-scrollbar snap-x snap-mandatory"
+              style={{ scrollbarWidth: "none" }}
+              tabIndex={0}
+              onKeyDown={handleKeyDown}
+              role="listbox"
+              aria-label="Список порід"
+            >
+              {breeds.map((breed) => {
+                const isHovered = hoveredBreedId === breed.id;
+                const primaryImageUrl = breed.image_url
+                  ? getImageUrl(breed.image_url)
+                  : null;
+                const hoverImageUrl = breed.image_hover_url
+                  ? getImageUrl(breed.image_hover_url)
+                  : primaryImageUrl;
+                const displayImageUrl = isHovered
+                  ? hoverImageUrl
+                  : primaryImageUrl;
 
-      {/* View all link */}
-      <div className="text-center mt-4">
-        <Link
-          href="/breeds"
-          className="text-lime-600 hover:text-lime-700 text-sm font-medium inline-flex items-center gap-1 cursor-pointer">
-          Переглянути всі породи
-          <ChevronRight className="h-4 w-4" />
-        </Link>
+                return (
+                  <Link
+                    key={breed.id}
+                    href={`/pets?breed=${breed.id}`}
+                    className="group relative bg-stone-100 rounded-[20px] p-4 pt-5 flex flex-col items-center 
+                               w-[200px] sm:w-[215px] h-[280px] sm:h-[297px] flex-shrink-0 snap-start cursor-pointer 
+                               transition-shadow duration-300 ease-in-out hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2"
+                    onMouseEnter={() => setHoveredBreedId(breed.id)}
+                    onMouseLeave={() => setHoveredBreedId(null)}
+                    onFocus={() => setHoveredBreedId(breed.id)}
+                    onBlur={() => setHoveredBreedId(null)}
+                    role="option"
+                    aria-selected={false}
+                    aria-label={`${breed.name} (${
+                      breed.species === "dog" ? "Собака" : "Кіт"
+                    })`}
+                  >
+                    <div className="relative w-full h-[160px] sm:h-[180px] mb-3 sm:mb-4 transition-transform duration-300 ease-in-out group-hover:scale-105">
+                      {displayImageUrl ? (
+                        <Image
+                          src={displayImageUrl}
+                          alt={breed.name}
+                          fill
+                          className="object-contain rounded-md"
+                          sizes="(max-width: 640px) 180px, 200px"
+                          loading="eager"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-md">
+                          <PawPrint className="h-16 w-16 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-full h-[40px] flex items-center justify-center px-1">
+                      <span
+                        className="font-geologica font-bold text-[15px] sm:text-base leading-snug text-center text-black/90 
+                                   overflow-hidden block"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
+                        {breed.name}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

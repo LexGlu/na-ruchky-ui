@@ -16,7 +16,8 @@ const Switch = React.forwardRef<
   <SwitchPrimitives.Root
     ref={ref}
     className={`${rootClasses} ${className || ""}`}
-    {...props}>
+    {...props}
+  >
     <SwitchPrimitives.Thumb className={thumbClasses} />
   </SwitchPrimitives.Root>
 ));

@@ -13,8 +13,8 @@ export const Breed = z.object({
   life_span: z.string().nullable().optional(),
   weight: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
-  image: z.string().nullable().optional(),
   image_url: z.string().nullable().optional(),
+  image_hover_url: z.string().nullable().optional(),
 });
 
 export type Breed = z.infer<typeof Breed>;

@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+
 import Image from "next/image";
 import Link from "next/link";
+
+import { PawPrint, Search, ArrowLeft, Loader2 } from "lucide-react";
+
 import { getBreeds } from "@/lib/services/breeds-service";
 import { getImageUrl } from "@/lib/utils/get-image-url";
 import { Breed } from "@/lib/types/breeds";
 import { Species } from "@/lib/types/pets";
-import { PawPrint, Search, ArrowLeft, Loader2 } from "lucide-react";
 
-// Create a separate component that uses useSearchParams
 function BreedsContent() {
   const searchParams = useSearchParams();
   const initialSpecies =
@@ -122,7 +124,8 @@ function BreedsContent() {
         <Link
           href="/"
           className="mr-4 p-2 rounded-full hover:bg-gray-100 cursor-pointer transition-colors"
-          aria-label="Back to home">
+          aria-label="Back to home"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-2xl font-bold">Всі породи</h1>
@@ -162,7 +165,8 @@ function BreedsContent() {
                     : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                 }`}
                 aria-pressed={activeSpecies === item.id}
-                aria-label={`Filter by ${item.label}`}>
+                aria-label={`Filter by ${item.label}`}
+              >
                 {item.label}
               </button>
             ))}
@@ -198,10 +202,12 @@ function BreedsContent() {
               <Link
                 key={`${breed.id}-${index}`}
                 href={`/breeds/${breed.id}`}
-                className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-all flex flex-col items-center transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-lime-300 focus:ring-offset-2">
+                className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-all flex flex-col items-center transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-lime-300 focus:ring-offset-2"
+              >
                 <div
                   className="relative w-24 h-24 mb-3 overflow-hidden rounded-full bg-gray-50 flex items-center justify-center"
-                  aria-hidden={!breed.image_url}>
+                  aria-hidden={!breed.image_url}
+                >
                   {breed.image_url ? (
                     <Image
                       src={getImageUrl(breed.image_url)}
@@ -237,7 +243,8 @@ function BreedsContent() {
               <button
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
-                className="px-6 py-2 bg-lime-500 hover:bg-lime-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-70 cursor-pointer">
+                className="px-6 py-2 bg-lime-500 hover:bg-lime-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-70 cursor-pointer"
+              >
                 {isLoadingMore ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />

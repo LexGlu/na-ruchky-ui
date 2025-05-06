@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import Header from "@/components/header";
-import Footer from "@/components/footer/footer";
+import Footer from "@/components/footer";
 import { geologica } from "@/components/ui/fonts";
 
 import AuthModal from "@/components/auth/auth-modal";
@@ -24,7 +24,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geologica.className} antialiased max-w-[1440px] mx-auto`}>
+        className={`${geologica.className} antialiased max-w-[1440px] mx-auto`}
+      >
         <Header />
         {children}
         <Footer />

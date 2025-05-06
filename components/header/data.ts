@@ -5,11 +5,7 @@ export interface NavLink {
 
 export const navLinks: NavLink[] = [
   {
-    label: "Загублені тварини",
-    href: "/lost-animals",
-  },
-  {
-    label: "Притулки/організації",
-    href: "/shelters",
+    label: "Наші працівники",
+    href: "/employees",
   },
 ];

@@ -9,7 +9,10 @@ import heroDogMascot from "@/public/images/hero-mascot-dog.svg";
 
 const HeroSection = () => {
   return (
-    <div className="bg-[#CCF28C] rounded-[17px] py-8 px-4 sm:px-12 relative">
+    <div
+      className="bg-[#CCF28C] rounded-b-[17px] py-8 px-4 sm:px-12 relative text-black mb-[2px]"
+      id="hero-section"
+    >
       {/* Heading */}
       <div className="container mx-auto">
         <h1 className="w-full text-4xl sm:text-[84px]/[90px] font-bold text-left mb-20 sm:mb-6 ">
@@ -53,11 +56,9 @@ const HeroSection = () => {
 export default function PetsPage() {
   return (
     <main className="flex flex-col">
-      {/* Hero section with search and breeds - no margin/padding between this and following sections */}
+      {/* Search section with lime background */}
+      <HeroSection />
       <section className="flex flex-col text-black gap-0 bg-white px-4 pt-4 rounded-[20px] mb-1">
-        {/* Search section with lime background */}
-        <HeroSection />
-
         {/* Breeds section on white background */}
         <div className="bg-white rounded-b-[20px]">
           <div className="container mx-auto py-8">

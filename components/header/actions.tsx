@@ -26,13 +26,13 @@ export default function HeaderActions() {
         <button
           type="button"
           onClick={handleAuthBtnClick}
-          className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[26px] rounded-2xl cursor-pointer"
+          className="bg-black text-white hover:opacity-95 py-[10px] px-[26px] rounded-lg cursor-pointer"
         >
           Увійти
         </button>
         <button
           type="button"
-          className="flex bg-[#2A2B3C] text-white hover:opacity-95 py-[13px] px-[15px] rounded-3xl cursor-pointer"
+          className="flex bg-black text-white hover:opacity-95 py-[13px] px-[15px] rounded-3xl cursor-pointer"
         >
           <Image src={paw} alt="paw icon" />
         </button>
@@ -49,7 +49,7 @@ export default function HeaderActions() {
       <div className="flex">
         <button
           onClick={handleLogOutBtnClick}
-          className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[20px] rounded-2xl cursor-pointer"
+          className="bg-[#2A2B3C] text-white hover:opacity-95 py-[10px] px-[20px] rounded-lg cursor-pointer"
         >
           Вийти
         </button>
