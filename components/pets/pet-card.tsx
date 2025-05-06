@@ -9,6 +9,7 @@ import { getImageUrl } from "@/lib/utils/get-image-url";
 import { useState } from "react";
 
 import petPlaceholder from "@/public/pet_placeholder.png";
+
 import heartIcon from "@/public/heart.svg";
 import syringeIcon from "@/public/syringe.svg";
 import playBtn from "@/public/play-btn.svg";
@@ -25,7 +26,8 @@ function Skeleton({ isDouble }: { isDouble?: boolean }) {
     <div
       className={`absolute inset-0 bg-gray-200 animate-pulse rounded-xl overflow-hidden ${
         isDouble ? "h-full" : ""
-      }`}>
+      }`}
+    >
       {/* Skeleton Loader (paw icon) */}
       <div className="h-full w-full flex items-center justify-center">
         <Image
@@ -75,9 +77,10 @@ export default function PetCard({
     <Link
       href={`/listings/${id}`}
       passHref
-      className={`relative group ${
+      className={`flex flex-col relative group ${
         isDouble ? "sm:col-span-2 h-[401px]" : "w-full sm:w-[270px] h-[401px]"
-      } overflow-hidden rounded-xl ${className}`}>
+      } overflow-hidden rounded-xl ${className}`}
+    >
       {isLoadingImage && <Skeleton isDouble={isDouble} />}
       <Image
         src={imageUrl}
@@ -131,8 +134,8 @@ interface NormalStateProps {
   isVaccinated?: boolean;
   health?: string | null;
 }
+
 function NormalState({
-  name,
   price,
   birthDate,
   location,
@@ -140,42 +143,51 @@ function NormalState({
   health,
 }: NormalStateProps) {
   const ageText = formatAge(birthDate ?? null);
-  const nameIconSize = 16;
+  const petCardIconWidth = 24;
+  const petCardIconHeight = 21;
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white p-3 transition-opacity group-hover:opacity-0">
-      <div className="flex justify-between items-center gap-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-[28px] font-normal truncate">{name}</h2>
-          {isVaccinated && (
-            <Image
-              src={syringeIcon}
-              alt="syringe icon"
-              width={nameIconSize}
-              height={nameIconSize}
-            />
-          )}
-          {health && (
-            <Image
-              src={heartIcon}
-              alt="heart icon"
-              width={nameIconSize}
-              height={nameIconSize}
-            />
-          )}
-        </div>
-        {Number(price) > 0 && (
-          <span className="font-normal text-nowrap">
-            ₴ {formatPrice(price)}
-          </span>
+    <div className="flex flex-col justify-between h-full relative">
+      {/* Top gradient overlay covering entire upper half */}
+      <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-black/30 to-transparent z-10 group-hover:opacity-0" />
+
+      {/* Icons positioned within the top gradient */}
+      <div className="flex items-center justify-end gap-1 p-3 text-white z-20 relative transition-opacity group-hover:opacity-0">
+        {health && (
+          <Image
+            src={heartIcon}
+            alt="heart icon"
+            width={petCardIconWidth}
+            height={petCardIconHeight}
+          />
+        )}
+        {isVaccinated && (
+          <Image
+            src={syringeIcon}
+            alt="syringe icon"
+            width={petCardIconWidth}
+            height={petCardIconHeight}
+          />
         )}
       </div>
-      <div className="flex justify-between text-sm mt-1">
-        <div className="flex items-center bg-white py-[4px] px-[6px] rounded-lg">
-          <span className="text-black font-medium">{ageText}</span>
-        </div>
-        <div className="flex items-center bg-white py-[4px] px-[6px] rounded-lg">
-          <span className="text-black font-medium">{location || "Київ"}</span>
+
+      {/* Bottom gradient overlay covering entire lower half */}
+      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/30 to-transparent z-10 group-hover:opacity-0" />
+
+      {/* Content positioned within the bottom gradient */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 text-white z-20 transition-opacity group-hover:opacity-0">
+        <div className="flex text-sm mt-1 gap-[6px] flex-wrap">
+          <div className="flex items-center bg-white py-[4px] px-[6px] rounded-2xl">
+            <span className="text-black">{ageText}</span>
+          </div>
+          <div className="flex items-center bg-transparent py-[4px] px-[6px] rounded-2xl border border-white">
+            <span className="text-white">{location || "Київ"}</span>
+          </div>
+          {price && (
+            <div className="flex items-center bg-transparent py-[4px] px-[6px] rounded-2xl border border-white">
+              <span className="text-white">₴ {formatPrice(price)}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -211,7 +223,8 @@ function HoverState({
 }: HoverStateProps) {
   const descriptionPlaceholder = "Це чудо чекає саме тебе!";
   const ageText = formatAge(birthDate ?? null);
-  const nameIconSize = 16;
+  const petCardIconWidth = 24;
+  const petCardIconHeight = 21;
 
   return (
     <div className="absolute inset-0 bg-[#717171] text-white px-4 py-5 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between">
@@ -232,22 +245,23 @@ function HoverState({
           <div
             className={`flex flex-col justify-between ${
               isDouble ? "w-2/3" : "w-1/2"
-            }`}>
-            <div className="flex items-center gap-3 mb-2">
+            }`}
+          >
+            <div className="flex items-center gap-1 mb-2">
               {health && (
                 <Image
                   src={heartIcon}
                   alt="heart icon"
-                  width={nameIconSize}
-                  height={nameIconSize}
+                  width={petCardIconWidth}
+                  height={petCardIconHeight}
                 />
               )}
               {isVaccinated && (
                 <Image
                   src={syringeIcon}
                   alt="syringe icon"
-                  width={nameIconSize}
-                  height={nameIconSize}
+                  width={petCardIconWidth}
+                  height={petCardIconHeight}
                 />
               )}
             </div>
@@ -277,7 +291,8 @@ function HoverState({
         <button
           type="button"
           className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-70"
-          aria-label="Learn more">
+          aria-label="Learn more"
+        >
           <Image src={playBtn} alt="play button" width={20} height={20} />
         </button>
       </div>
