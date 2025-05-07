@@ -149,10 +149,10 @@ function NormalState({
   return (
     <div className="flex flex-col justify-between h-full relative">
       {/* Top gradient overlay covering entire upper half */}
-      <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-black/30 to-transparent z-10 group-hover:opacity-0" />
+      <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-black/40 to-transparent z-8 group-hover:opacity-0" />
 
       {/* Icons positioned within the top gradient */}
-      <div className="flex items-center justify-end gap-1 p-3 text-white z-20 relative transition-opacity group-hover:opacity-0">
+      <div className="flex items-center justify-end gap-1 p-3 text-white z-[9] relative transition-opacity group-hover:opacity-0">
         {health && (
           <Image
             src={heartIcon}
@@ -172,7 +172,7 @@ function NormalState({
       </div>
 
       {/* Bottom gradient overlay covering entire lower half */}
-      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/30 to-transparent z-10 group-hover:opacity-0" />
+      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/40 to-transparent z-8 group-hover:opacity-0" />
 
       {/* Content positioned within the bottom gradient */}
       <div className="absolute bottom-0 left-0 right-0 p-3 text-white z-20 transition-opacity group-hover:opacity-0">

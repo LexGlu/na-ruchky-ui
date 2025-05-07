@@ -59,7 +59,7 @@ export default function Header() {
   }, [pathname, isHomePage]);
 
   const headerBaseClasses =
-    "p-2 sticky top-0 z-[11] transition-colors duration-300 ease-in-out";
+    "p-2 sticky top-0 z-[49] transition-colors duration-300 ease-in-out";
   const headerDynamicClasses = isAlternateDesign
     ? "bg-white rounded-b-[24px] mb-[2px]"
     : "bg-[#CCF28C]";
