@@ -51,6 +51,7 @@ export const Pet = z.object({
   location: z.string().nullable().optional(),
   birth_date: z.string().nullable().optional(),
   is_vaccinated: z.boolean(),
+  is_hypoallergenic: z.boolean(),
   short_description: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   health: z.string().nullable().optional(),
