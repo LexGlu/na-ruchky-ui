@@ -4,10 +4,12 @@ import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+import { Check } from "lucide-react";
 import pawPrint from "@/public/icons/paw-print.svg";
 import mapPin from "@/public/icons/map-pin.svg";
 import arrowDown from "@/public/icons/arrow-down.svg";
-import { Check } from "lucide-react";
+import dogIcon from "@/public/icons/dog-icon.svg";
+import catIcon from "@/public/icons/cat-icon.svg";
 
 type FilterOption = {
   id: string;
@@ -23,9 +25,9 @@ type DropdownProps = {
   icon?: string;
   iconAlt?: string;
   name: string;
+  placeholder: string;
 };
 
-// Memoized FilterDropdown Component to prevent unnecessary rerenders
 const FilterDropdown = memo(
   ({
     options,
@@ -36,10 +38,10 @@ const FilterDropdown = memo(
     icon,
     iconAlt,
     name,
+    placeholder,
   }: DropdownProps) => {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Handle option selection
     const handleOptionSelect = useCallback(
       (label: string) => {
         onChange(label);
@@ -47,10 +49,8 @@ const FilterDropdown = memo(
       [onChange]
     );
 
-    // Close dropdown when clicking outside
     useEffect(() => {
       if (!isOpen) return;
-
       function handleClickOutside(event: MouseEvent) {
         if (
           dropdownRef.current &&
@@ -59,14 +59,12 @@ const FilterDropdown = memo(
           onToggle();
         }
       }
-
       document.addEventListener("mousedown", handleClickOutside);
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, [isOpen, onToggle]);
 
-    // Handle keyboard accessibility
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
         if (e.key === "Escape" && isOpen) {
@@ -75,6 +73,13 @@ const FilterDropdown = memo(
       },
       [isOpen, onToggle]
     );
+
+    const displayValue =
+      (selectedValue === placeholder ||
+        !options.some((opt) => opt.label === selectedValue)) &&
+      placeholder
+        ? placeholder
+        : selectedValue;
 
     return (
       <div className="relative flex-grow sm:flex-1" ref={dropdownRef}>
@@ -89,7 +94,13 @@ const FilterDropdown = memo(
           aria-label={`Select ${name} option`}
           onKeyDown={handleKeyDown}
         >
-          <span className="truncate block">{selectedValue}</span>
+          <span
+            className={`truncate block ${
+              displayValue === placeholder ? "text-gray-500" : "text-gray-900"
+            }`}
+          >
+            {displayValue}
+          </span>
         </button>
         {icon && (
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -114,8 +125,6 @@ const FilterDropdown = memo(
             }`}
           />
         </div>
-
-        {/* Dropdown options with improved positioning */}
         {isOpen && (
           <div className="absolute mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 max-h-60 overflow-y-auto">
             <ul
@@ -132,6 +141,10 @@ const FilterDropdown = memo(
                     selectedValue === option.label
                       ? "bg-gray-50 font-medium"
                       : ""
+                  } ${
+                    option.label === placeholder
+                      ? "text-gray-500"
+                      : "text-gray-900"
                   }`}
                   onClick={() => {
                     handleOptionSelect(option.label);
@@ -155,11 +168,8 @@ const FilterDropdown = memo(
     );
   }
 );
-
-// Set display name for debugging
 FilterDropdown.displayName = "FilterDropdown";
 
-// Memoized CategoryTab component
 const CategoryTab = memo(
   ({
     id,
@@ -190,10 +200,8 @@ const CategoryTab = memo(
     </button>
   )
 );
-
 CategoryTab.displayName = "CategoryTab";
 
-// Memoized VaccinationCheckbox component
 const VaccinationCheckbox = memo(
   ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
     <div className="mt-2 flex items-center">
@@ -210,7 +218,7 @@ const VaccinationCheckbox = memo(
           className={`
           h-5 w-5 flex items-center justify-center
           rounded-full border transition-colors duration-200 ease-in-out
-          cursor-pointer 
+          cursor-pointer
           ${checked ? "bg-black border-black" : "bg-white border-gray-300"}
           peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-lime-300
         `}
@@ -232,52 +240,150 @@ const VaccinationCheckbox = memo(
     </div>
   )
 );
-
 VaccinationCheckbox.displayName = "VaccinationCheckbox";
 
 export default function SearchBar() {
   const router = useRouter();
 
-  // Filter category state
-  const [housingFilter, setHousingFilter] = useState<string>(
-    "Можна утримувати в квартирі"
-  );
-  const [locationFilter, setLocationFilter] = useState<string>("Уся Україна");
-  const [ageFilter, setAgeFilter] = useState<string>("Вік");
+  // --- Placeholder Constants ---
+  const ALL_TAB_PLACEHOLDER = "Оберіть тип житла";
+  const BREED_PLACEHOLDER = "Оберіть породу";
+  const LOCATION_PLACEHOLDER = "Уся Україна";
+  const AGE_PLACEHOLDER = "Вік";
+
+  // --- State for the dynamic primary filter ---
+  const [primaryFilterSelectedValue, setPrimaryFilterSelectedValue] =
+    useState<string>(ALL_TAB_PLACEHOLDER);
+  const [primaryFilterOptions, setPrimaryFilterOptions] = useState<
+    FilterOption[]
+  >([]);
+  const [primaryFilterIcon, setPrimaryFilterIcon] = useState<string>(pawPrint);
+  const [primaryFilterIconAlt, setPrimaryFilterIconAlt] =
+    useState<string>("Housing type");
+  const [primaryFilterName, setPrimaryFilterName] = useState<string>("housing");
+  const [currentPrimaryPlaceholder, setCurrentPrimaryPlaceholder] =
+    useState<string>(ALL_TAB_PLACEHOLDER);
+
+  // --- Other filter states ---
+  const [locationFilter, setLocationFilter] =
+    useState<string>(LOCATION_PLACEHOLDER);
+  const [ageFilter, setAgeFilter] = useState<string>(AGE_PLACEHOLDER);
   const [vaccinated, setVaccinated] = useState<boolean>(false);
-
-  // Active dropdown state - using single state instead of multiple booleans
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  // Active tab state
   const [activeTab, setActiveTab] = useState<string>("all");
 
-  // Common options
-  const housingOptions: FilterOption[] = [
+  // --- Static Filter Options Data ---
+  const housingOptionsData: FilterOption[] = [
     { id: "apartment", label: "Можна утримувати в квартирі" },
     { id: "house", label: "Можна утримувати в будинку" },
     { id: "outdoor", label: "Можна утримувати на вулиці" },
   ];
 
+  const dogBreedOptionsData: FilterOption[] = [
+    { id: "german-shepherd", label: "Німецька вівчарка" },
+    { id: "yorkshire-terrier", label: "Йоркширський тер'єр" },
+    { id: "labrador-retriever", label: "Лабрадор ретривер" },
+    { id: "chihuahua", label: "Чихуахуа" },
+    { id: "french-bulldog", label: "Французький бульдог" },
+  ];
+
+  const catBreedOptionsData: FilterOption[] = [
+    { id: "british-shorthair", label: "Британська короткошерста" },
+    { id: "maine-coon", label: "Мейн-кун" },
+    { id: "scottish-fold", label: "Шотландська висловуха" },
+    { id: "sphynx", label: "Сфінкс" },
+    { id: "bengal", label: "Бенгальська" },
+  ];
+
   const locationOptions: FilterOption[] = [
-    { id: "all", label: "Уся Україна" },
     { id: "kyiv", label: "Київ" },
     { id: "lviv", label: "Львів" },
     { id: "odesa", label: "Одеса" },
     { id: "kharkiv", label: "Харків" },
   ];
+  const selectableLocationOptions: FilterOption[] = [
+    { id: "all-ukraine", label: LOCATION_PLACEHOLDER },
+    ...locationOptions,
+  ];
 
-  const ageOptions: FilterOption[] = [
-    { id: "any", label: "Вік" },
+  const ageOptionsData: FilterOption[] = [
     { id: "puppy", label: "До 1 року" },
     { id: "young", label: "1-3 роки" },
     { id: "adult", label: "3-8 років" },
     { id: "senior", label: "Від 8 років" },
   ];
 
-  // Improved dropdown toggle handlers with useCallback
-  const toggleHousingDropdown = useCallback(() => {
-    setActiveDropdown((prev) => (prev === "housing" ? null : "housing"));
+  const selectableAgeOptions: FilterOption[] = [
+    { id: "any-age", label: AGE_PLACEHOLDER },
+    ...ageOptionsData,
+  ];
+
+  useEffect(() => {
+    let newSelectedValue = primaryFilterSelectedValue;
+    let newOptions: FilterOption[] = [];
+    let newIcon = primaryFilterIcon;
+    let newIconAlt = primaryFilterIconAlt;
+    let newName = primaryFilterName;
+    let newPlaceholder = currentPrimaryPlaceholder;
+
+    if (activeTab === "all") {
+      newOptions = housingOptionsData;
+      newIcon = pawPrint;
+      newIconAlt = "Housing type";
+      newName = "housing";
+      newPlaceholder = ALL_TAB_PLACEHOLDER;
+
+      if (
+        !housingOptionsData.some(
+          (opt) => opt.label === primaryFilterSelectedValue
+        ) &&
+        primaryFilterSelectedValue !== ALL_TAB_PLACEHOLDER
+      ) {
+        newSelectedValue = ALL_TAB_PLACEHOLDER;
+      }
+    } else if (activeTab === "dog") {
+      newOptions = dogBreedOptionsData;
+      newIcon = dogIcon;
+      newIconAlt = "Dog breed";
+      newName = "breedDog";
+      newPlaceholder = BREED_PLACEHOLDER;
+      if (
+        !dogBreedOptionsData.some(
+          (opt) => opt.label === primaryFilterSelectedValue
+        ) &&
+        primaryFilterSelectedValue !== BREED_PLACEHOLDER
+      ) {
+        newSelectedValue = BREED_PLACEHOLDER;
+      }
+    } else if (activeTab === "cat") {
+      newOptions = catBreedOptionsData;
+      newIcon = catIcon;
+      newIconAlt = "Cat breed";
+      newName = "breedCat";
+      newPlaceholder = BREED_PLACEHOLDER;
+      if (
+        !catBreedOptionsData.some(
+          (opt) => opt.label === primaryFilterSelectedValue
+        ) &&
+        primaryFilterSelectedValue !== BREED_PLACEHOLDER
+      ) {
+        newSelectedValue = BREED_PLACEHOLDER;
+      }
+    }
+
+    setPrimaryFilterOptions(newOptions);
+    setPrimaryFilterIcon(newIcon);
+    setPrimaryFilterIconAlt(newIconAlt);
+    setPrimaryFilterName(newName);
+    setCurrentPrimaryPlaceholder(newPlaceholder);
+    setPrimaryFilterSelectedValue(newSelectedValue);
+
+    setActiveDropdown(null); // Close dropdown when tab changes
+  }, [activeTab]);
+
+  // --- Dropdown toggle handlers ---
+  const togglePrimaryFilterDropdown = useCallback(() => {
+    setActiveDropdown((prev) => (prev === "primary" ? null : "primary"));
   }, []);
 
   const toggleLocationDropdown = useCallback(() => {
@@ -288,9 +394,9 @@ export default function SearchBar() {
     setActiveDropdown((prev) => (prev === "age" ? null : "age"));
   }, []);
 
-  // Filter change handlers with useCallback
-  const handleHousingChange = useCallback((value: string) => {
-    setHousingFilter(value);
+  // --- Filter change handlers ---
+  const handlePrimaryFilterChange = useCallback((value: string) => {
+    setPrimaryFilterSelectedValue(value);
   }, []);
 
   const handleLocationChange = useCallback((value: string) => {
@@ -301,17 +407,15 @@ export default function SearchBar() {
     setAgeFilter(value);
   }, []);
 
-  // Tab change handler with useCallback
   const handleTabChange = useCallback((tabId: string) => {
     setActiveTab(tabId);
   }, []);
 
-  // Toggle vaccination checkbox with useCallback
   const toggleVaccinated = useCallback(() => {
     setVaccinated((prev) => !prev);
   }, []);
 
-  // Handle search button click with useCallback
+  // --- Handle search button click ---
   const handleSearch = useCallback(() => {
     const queryParams = new URLSearchParams();
 
@@ -319,15 +423,19 @@ export default function SearchBar() {
       queryParams.set("species", activeTab);
     }
 
-    if (housingFilter !== "Можна утримувати в квартирі") {
-      queryParams.set("housing", housingFilter);
+    if (primaryFilterSelectedValue !== currentPrimaryPlaceholder) {
+      if (activeTab === "all") {
+        queryParams.set("housing", primaryFilterSelectedValue);
+      } else {
+        queryParams.set("breed", primaryFilterSelectedValue);
+      }
     }
 
-    if (locationFilter !== "Уся Україна") {
+    if (locationFilter !== LOCATION_PLACEHOLDER) {
       queryParams.set("location", locationFilter);
     }
 
-    if (ageFilter !== "Вік") {
+    if (ageFilter !== AGE_PLACEHOLDER) {
       queryParams.set("age", ageFilter);
     }
 
@@ -336,9 +444,16 @@ export default function SearchBar() {
     }
 
     router.push(`/search?${queryParams.toString()}`);
-  }, [activeTab, housingFilter, locationFilter, ageFilter, vaccinated, router]);
+  }, [
+    activeTab,
+    primaryFilterSelectedValue,
+    currentPrimaryPlaceholder,
+    locationFilter,
+    ageFilter,
+    vaccinated,
+    router,
+  ]);
 
-  // Category tabs data
   const categoryTabs = [
     { id: "all", label: "Усі" },
     { id: "dog", label: "Собаки" },
@@ -347,7 +462,6 @@ export default function SearchBar() {
 
   return (
     <div className="w-full">
-      {/* Category tabs */}
       <div className="flex mb-4 gap-[6px] inline-flex">
         {categoryTabs.map((tab) => (
           <CategoryTab
@@ -360,23 +474,21 @@ export default function SearchBar() {
         ))}
       </div>
 
-      {/* Filter dropdowns */}
       <div className="flex flex-col sm:flex-row gap-1 mb-3">
-        {/* Housing filter dropdown */}
         <FilterDropdown
-          options={housingOptions}
-          selectedValue={housingFilter}
-          isOpen={activeDropdown === "housing"}
-          onChange={handleHousingChange}
-          onToggle={toggleHousingDropdown}
-          icon={pawPrint}
-          iconAlt="Housing type"
-          name="housing"
+          options={primaryFilterOptions}
+          selectedValue={primaryFilterSelectedValue}
+          isOpen={activeDropdown === "primary"}
+          onChange={handlePrimaryFilterChange}
+          onToggle={togglePrimaryFilterDropdown}
+          icon={primaryFilterIcon}
+          iconAlt={primaryFilterIconAlt}
+          name={primaryFilterName}
+          placeholder={currentPrimaryPlaceholder}
         />
 
-        {/* Location filter dropdown */}
         <FilterDropdown
-          options={locationOptions}
+          options={selectableLocationOptions}
           selectedValue={locationFilter}
           isOpen={activeDropdown === "location"}
           onChange={handleLocationChange}
@@ -384,19 +496,19 @@ export default function SearchBar() {
           icon={mapPin}
           iconAlt="Location"
           name="location"
+          placeholder={LOCATION_PLACEHOLDER}
         />
 
-        {/* Age filter dropdown */}
         <FilterDropdown
-          options={ageOptions}
+          options={selectableAgeOptions}
           selectedValue={ageFilter}
           isOpen={activeDropdown === "age"}
           onChange={handleAgeChange}
           onToggle={toggleAgeDropdown}
           name="age"
+          placeholder={AGE_PLACEHOLDER}
         />
 
-        {/* Search button */}
         <button
           onClick={handleSearch}
           className="py-3 px-8 bg-black text-white leading-none rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors cursor-pointer"
@@ -407,7 +519,6 @@ export default function SearchBar() {
         </button>
       </div>
 
-      {/* Vaccination checkbox */}
       <VaccinationCheckbox checked={vaccinated} onChange={toggleVaccinated} />
     </div>
   );

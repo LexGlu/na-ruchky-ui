@@ -14,27 +14,27 @@ const HeroSection = () => {
       id="hero-section"
     >
       {/* Heading */}
-      <div className="container mx-auto">
-        <h1 className="w-full text-4xl sm:text-[84px]/[90px] font-bold text-left mb-20 sm:mb-6 ">
+      <div className="container flex flex-col mx-auto gap-0 sm:gap-[100px]">
+        <h1 className="w-2/3 text-4xl sm:text-[96px]/[82px] font-bold text-left">
           Тваринки, які
-          <br /> працюють на вашу
-          <br /> радість
+          <br /> працюють
+          <br /> на вашу радість
         </h1>
 
         <div className="relative mt-6">
-          <div className="hidden sm:block absolute -top-[125px] right-26 lg:right-28 xl:right-26 z-10 pointer-events-none">
+          <div className="hidden sm:block absolute -top-[346px] right-26 lg:right-28 xl:right-22 z-10 pointer-events-none">
             <Image
               src={heroDogMascot}
               alt="Dog mascot with speech bubble"
-              width={280}
-              height={180}
+              width={404}
+              height={386.7}
               className="object-contain"
               priority
             />
           </div>
 
           {/* Mobile mascot - shown only on small screens */}
-          <div className="sm:hidden absolute -top-16 right-0 z-10 pointer-events-none">
+          <div className="sm:hidden absolute -top-[131px] -right-3 z-10 pointer-events-none">
             <Image
               src={heroDogMascot}
               alt="Dog mascot with speech bubble"
