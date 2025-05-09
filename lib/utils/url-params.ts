@@ -41,6 +41,12 @@ export function getIsVaccinated(
   return searchParams.get("is_vaccinated") === "true";
 }
 
+export function getIsHypoallergenic(
+  searchParams: ReadonlyURLSearchParams
+): boolean {
+  return searchParams.get("is_hypoallergenic") === "true";
+}
+
 export function hasActiveFilters(
   searchParams: ReadonlyURLSearchParams,
   filterOptions: FilterOption[]

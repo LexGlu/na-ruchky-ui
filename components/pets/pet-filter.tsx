@@ -1,22 +1,29 @@
 "use client";
 
 import { memo } from "react";
+
 import { filterOptions } from "@/lib/types/pets";
 import { usePetsFilter } from "@/hooks/use-pets-filter";
+
 import PetTypeTab from "@/components/pets/pet-type-tab";
 import FilterDropdown from "@/components/pets/filter-dropdown";
-import VaccinationToggle from "@/components/pets/vaccination-toggle";
+import BaseToggle from "@/components/pets/base-toggle";
+
+import hypoallergenicIcon from "@/public/icons/heart-dark.svg";
+import vaccinationIcon from "@/public/icons/syringe-dark.svg";
 
 function PetsFilter() {
   const {
     openFilter,
     currentPetType,
     currentIsVaccinated,
+    currentIsHypoallergenic,
     hasFilters,
     getFilterValue,
     toggleFilter,
     handlePetTypeChange,
     handleVaccinationChange,
+    handleHypoallergenicChange,
     handleFilterSelect,
     handleRemoveFilter,
     handleClearAllFilters,
@@ -24,23 +31,26 @@ function PetsFilter() {
 
   return (
     <div className="flex flex-col text-black py-8 gap-8">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="md:w-1/2">
-          <h2 className="text-4xl" id="pets-heading">
-            Пухнастики
+      <div className="flex flex-col md:flex-row gap-8 justify-between items-center">
+        <div className="md:w-1/3">
+          <h2
+            className="text-4xl md:text-8xl/[82px] font-semibold"
+            id="pets-heading"
+          >
+            Готові стати другом
           </h2>
         </div>
-        <div className="md:w-1/2 flex flex-col gap-4">
-          <p className="text-2xl md:text-4xl font-light">
-            Наші спеціалісти, які очікують на свого власника
+        <div className="md:w-1/2 flex flex-col gap-6 pt-5">
+          <p className="text-lg md:text-xl">
+            У кожного вихованця свій характер, особливості та життєва історія.
+            Створити найкращі умови для життя тварин.
           </p>
 
-          {/* Pet Type Tabs */}
           <div
             className="flex gap-2 w-full"
             role="tablist"
-            aria-labelledby="pets-heading">
+            aria-labelledby="pets-heading"
+          >
             <PetTypeTab
               type="all"
               activeType={currentPetType}
@@ -60,12 +70,12 @@ function PetsFilter() {
         </div>
       </div>
 
-      {/* Filter Section */}
       <div className="flex flex-col md:flex-row items-center justify-between pt-4">
         <div
           className="w-full md:w-2/3 flex flex-wrap items-center gap-2"
           role="group"
-          aria-label="Filter options">
+          aria-label="Filter options"
+        >
           {filterOptions.map((filter) => (
             <FilterDropdown
               key={filter.label}
@@ -78,21 +88,29 @@ function PetsFilter() {
             />
           ))}
 
-          {/* Clear all filters button */}
           {hasFilters && (
             <button
               onClick={handleClearAllFilters}
               className="ml-2 text-sm text-black hover:underline cursor-pointer"
-              aria-label="Очистити всі фільтри">
+              aria-label="Очистити всі фільтри"
+            >
               Очистити фільтри
             </button>
           )}
         </div>
 
-        <div className="w-full md:w-1/3 flex justify-end items-center mt-4 md:mt-0">
-          <VaccinationToggle
-            isVaccinated={currentIsVaccinated}
+        <div className="w-full md:w-1/3 flex flex-row justify-end items-center mt-4 md:mt-0 gap-6 transform -rotate-[0.03deg]">
+          <BaseToggle
+            isActive={currentIsHypoallergenic}
+            onToggle={handleHypoallergenicChange}
+            text="Гіпоалергенні"
+            icon={hypoallergenicIcon}
+          />
+          <BaseToggle
+            isActive={currentIsVaccinated}
             onToggle={handleVaccinationChange}
+            text="Зроблені щеплення"
+            icon={vaccinationIcon}
           />
         </div>
       </div>

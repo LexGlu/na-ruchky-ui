@@ -188,10 +188,7 @@ const CategoryTab = memo(
         isActive ? "bg-white font-medium" : "bg-[#C1E270] hover:bg-opacity-80"
       }`}
       onClick={onClick}
-      aria-pressed={isActive}
-      aria-label={`Show ${
-        label === "Усі" ? "all pets" : `only ${label.toLowerCase()}`
-      }`}
+      aria-selected={isActive}
       role="tab"
       tabIndex={0}
       type="button"
@@ -251,27 +248,6 @@ export default function SearchBar() {
   const LOCATION_PLACEHOLDER = "Уся Україна";
   const AGE_PLACEHOLDER = "Вік";
 
-  // --- State for the dynamic primary filter ---
-  const [primaryFilterSelectedValue, setPrimaryFilterSelectedValue] =
-    useState<string>(ALL_TAB_PLACEHOLDER);
-  const [primaryFilterOptions, setPrimaryFilterOptions] = useState<
-    FilterOption[]
-  >([]);
-  const [primaryFilterIcon, setPrimaryFilterIcon] = useState<string>(pawPrint);
-  const [primaryFilterIconAlt, setPrimaryFilterIconAlt] =
-    useState<string>("Housing type");
-  const [primaryFilterName, setPrimaryFilterName] = useState<string>("housing");
-  const [currentPrimaryPlaceholder, setCurrentPrimaryPlaceholder] =
-    useState<string>(ALL_TAB_PLACEHOLDER);
-
-  // --- Other filter states ---
-  const [locationFilter, setLocationFilter] =
-    useState<string>(LOCATION_PLACEHOLDER);
-  const [ageFilter, setAgeFilter] = useState<string>(AGE_PLACEHOLDER);
-  const [vaccinated, setVaccinated] = useState<boolean>(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("all");
-
   // --- Static Filter Options Data ---
   const housingOptionsData: FilterOption[] = [
     { id: "apartment", label: "Можна утримувати в квартирі" },
@@ -318,13 +294,42 @@ export default function SearchBar() {
     ...ageOptionsData,
   ];
 
+  // --- State for the dynamic primary filter ---
+  const [primaryFilterSelectedValue, setPrimaryFilterSelectedValue] =
+    useState<string>(ALL_TAB_PLACEHOLDER);
+  const [primaryFilterOptions, setPrimaryFilterOptions] =
+    useState<FilterOption[]>(housingOptionsData);
+  const [primaryFilterIcon, setPrimaryFilterIcon] = useState<string>(pawPrint);
+  const [primaryFilterIconAlt, setPrimaryFilterIconAlt] =
+    useState<string>("Housing type");
+  const [primaryFilterName, setPrimaryFilterName] = useState<string>("housing");
+  const [currentPrimaryPlaceholder, setCurrentPrimaryPlaceholder] =
+    useState<string>(ALL_TAB_PLACEHOLDER);
+
+  // --- Other filter states ---
+  const [locationFilter, setLocationFilter] =
+    useState<string>(LOCATION_PLACEHOLDER);
+  const [ageFilter, setAgeFilter] = useState<string>(AGE_PLACEHOLDER);
+  const [vaccinated, setVaccinated] = useState<boolean>(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("all");
+
+  // Fix for infinite rendering: Use useRef to track if we're in first render
+  const isFirstRender = useRef(true);
+
+  // --- Update primary filter based on active tab ---
   useEffect(() => {
-    let newSelectedValue = primaryFilterSelectedValue;
-    let newOptions: FilterOption[] = [];
-    let newIcon = primaryFilterIcon;
-    let newIconAlt = primaryFilterIconAlt;
-    let newName = primaryFilterName;
-    let newPlaceholder = currentPrimaryPlaceholder;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    let newSelectedValue: string;
+    let newOptions: FilterOption[];
+    let newIcon: string;
+    let newIconAlt: string;
+    let newName: string;
+    let newPlaceholder: string;
 
     if (activeTab === "all") {
       newOptions = housingOptionsData;
@@ -340,6 +345,8 @@ export default function SearchBar() {
         primaryFilterSelectedValue !== ALL_TAB_PLACEHOLDER
       ) {
         newSelectedValue = ALL_TAB_PLACEHOLDER;
+      } else {
+        newSelectedValue = primaryFilterSelectedValue;
       }
     } else if (activeTab === "dog") {
       newOptions = dogBreedOptionsData;
@@ -354,8 +361,10 @@ export default function SearchBar() {
         primaryFilterSelectedValue !== BREED_PLACEHOLDER
       ) {
         newSelectedValue = BREED_PLACEHOLDER;
+      } else {
+        newSelectedValue = primaryFilterSelectedValue;
       }
-    } else if (activeTab === "cat") {
+    } else {
       newOptions = catBreedOptionsData;
       newIcon = catIcon;
       newIconAlt = "Cat breed";
@@ -368,6 +377,8 @@ export default function SearchBar() {
         primaryFilterSelectedValue !== BREED_PLACEHOLDER
       ) {
         newSelectedValue = BREED_PLACEHOLDER;
+      } else {
+        newSelectedValue = primaryFilterSelectedValue;
       }
     }
 
@@ -379,7 +390,7 @@ export default function SearchBar() {
     setPrimaryFilterSelectedValue(newSelectedValue);
 
     setActiveDropdown(null); // Close dropdown when tab changes
-  }, [activeTab]);
+  }, [activeTab]); // Only depend on activeTab
 
   // --- Dropdown toggle handlers ---
   const togglePrimaryFilterDropdown = useCallback(() => {

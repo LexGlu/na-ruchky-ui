@@ -8,6 +8,7 @@ import {
   getFilterValue,
   getPetType,
   getIsVaccinated,
+  getIsHypoallergenic,
   hasActiveFilters,
 } from "@/lib/utils/url-params";
 
@@ -16,13 +17,16 @@ export function usePetsFilter() {
   const searchParams = useSearchParams();
   const [openFilter, setOpenFilter] = useState<string | null>(null);
 
-  // Memoize these values to prevent unnecessary recalculations
   const currentPetType = useMemo(
     () => getPetType(searchParams),
     [searchParams]
   );
   const currentIsVaccinated = useMemo(
     () => getIsVaccinated(searchParams),
+    [searchParams]
+  );
+  const currentIsHypoallergenic = useMemo(
+    () => getIsHypoallergenic(searchParams),
     [searchParams]
   );
   const hasFilters = useMemo(
@@ -35,7 +39,6 @@ export function usePetsFilter() {
     [searchParams]
   );
 
-  // Function to update the URL with new params
   const updateURL = useCallback(
     (params: URLSearchParams) => {
       const newUrl = params.toString() ? `/?${params.toString()}` : "/";
@@ -44,7 +47,6 @@ export function usePetsFilter() {
     [router]
   );
 
-  // Handle pet type selection
   const handlePetTypeChange = useCallback(
     (type: PetType) => {
       const params = createURLParams(searchParams);
@@ -60,7 +62,6 @@ export function usePetsFilter() {
     [searchParams, updateURL]
   );
 
-  // Handle vaccination toggle
   const handleVaccinationChange = useCallback(
     (checked: boolean) => {
       const params = createURLParams(searchParams);
@@ -76,18 +77,30 @@ export function usePetsFilter() {
     [searchParams, updateURL]
   );
 
-  // Toggle filter dropdown
+  const handleHypoallergenicChange = useCallback(
+    (checked: boolean) => {
+      const params = createURLParams(searchParams);
+
+      if (checked) {
+        params.set("is_hypoallergenic", "true");
+      } else {
+        params.delete("is_hypoallergenic");
+      }
+
+      updateURL(params);
+    },
+    [searchParams, updateURL]
+  );
+
   const toggleFilter = useCallback((filterName: string) => {
     setOpenFilter((prev) => (prev === filterName ? null : filterName));
   }, []);
 
-  // Handle filter selection
   const handleFilterSelect = useCallback(
     (param: string, value: string) => {
       const params = createURLParams(searchParams);
       const currentValue = getFilterValue(searchParams, param);
 
-      // If the same value is selected, remove the filter
       if (value === currentValue) {
         if (param === "min_age") {
           params.delete("min_age");
@@ -96,7 +109,6 @@ export function usePetsFilter() {
           params.delete(param);
         }
       } else {
-        // Handle age filter specially
         if (param === "min_age") {
           const selectedOption = filterOptions[0].options.find(
             (opt) => opt.value === value
@@ -126,7 +138,6 @@ export function usePetsFilter() {
     [searchParams, updateURL]
   );
 
-  // Handle removing a filter
   const handleRemoveFilter = useCallback(
     (param: string) => {
       const params = createURLParams(searchParams);
@@ -143,7 +154,6 @@ export function usePetsFilter() {
     [searchParams, updateURL]
   );
 
-  // Handle clearing all filters
   const handleClearAllFilters = useCallback(() => {
     const params = new URLSearchParams();
     updateURL(params);
@@ -153,11 +163,13 @@ export function usePetsFilter() {
     openFilter,
     currentPetType,
     currentIsVaccinated,
+    currentIsHypoallergenic,
     hasFilters,
     getFilterValue: getFilterValueCallback,
     toggleFilter,
     handlePetTypeChange,
     handleVaccinationChange,
+    handleHypoallergenicChange,
     handleFilterSelect,
     handleRemoveFilter,
     handleClearAllFilters,

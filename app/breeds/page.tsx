@@ -72,14 +72,14 @@ function BreedsContent() {
         setLoading(false);
       }
     },
-    [activeSpecies, offset]
+    [activeSpecies, offset, itemsPerPage]
   );
 
   // Initial breeds fetch and when species changes
   useEffect(() => {
     // Reset everything when species changes
     fetchBreeds(true);
-  }, [activeSpecies]);
+  }, [activeSpecies, fetchBreeds]);
 
   // Filter breeds based on search term
   useEffect(() => {
