@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -11,10 +11,61 @@ import arrowDown from "@/public/icons/arrow-down.svg";
 import dogIcon from "@/public/icons/dog-icon.svg";
 import catIcon from "@/public/icons/cat-icon.svg";
 
+const CONSTANTS = {
+  ALL_TAB_PLACEHOLDER: "Оберіть тип житла",
+  BREED_PLACEHOLDER: "Оберіть породу",
+  LOCATION_PLACEHOLDER: "Уся Україна",
+  AGE_PLACEHOLDER: "Вік",
+} as const;
+
 type FilterOption = {
   id: string;
   label: string;
 };
+
+const STATIC_DATA = {
+  housingOptions: [
+    { id: "apartment", label: "Можна утримувати в квартирі" },
+    { id: "house", label: "Можна утримувати в будинку" },
+    { id: "outdoor", label: "Можна утримувати на вулиці" },
+  ] as FilterOption[],
+
+  dogBreedOptions: [
+    { id: "german-shepherd", label: "Німецька вівчарка" },
+    { id: "yorkshire-terrier", label: "Йоркширський тер'єр" },
+    { id: "labrador-retriever", label: "Лабрадор ретривер" },
+    { id: "chihuahua", label: "Чихуахуа" },
+    { id: "french-bulldog", label: "Французький бульдог" },
+  ] as FilterOption[],
+
+  catBreedOptions: [
+    { id: "british-shorthair", label: "Британська короткошерста" },
+    { id: "maine-coon", label: "Мейн-кун" },
+    { id: "scottish-fold", label: "Шотландська висловуха" },
+    { id: "sphynx", label: "Сфінкс" },
+    { id: "bengal", label: "Бенгальська" },
+  ] as FilterOption[],
+
+  locationOptions: [
+    { id: "kyiv", label: "Київ" },
+    { id: "lviv", label: "Львів" },
+    { id: "odesa", label: "Одеса" },
+    { id: "kharkiv", label: "Харків" },
+  ] as FilterOption[],
+
+  ageOptions: [
+    { id: "puppy", label: "До 1 року" },
+    { id: "young", label: "1-3 роки" },
+    { id: "adult", label: "3-8 років" },
+    { id: "senior", label: "Від 8 років" },
+  ] as FilterOption[],
+
+  categoryTabs: [
+    { id: "all", label: "Усі" },
+    { id: "dog", label: "Собаки" },
+    { id: "cat", label: "Коти" },
+  ] as const,
+} as const;
 
 type DropdownProps = {
   options: FilterOption[];
@@ -239,77 +290,48 @@ const VaccinationCheckbox = memo(
 );
 VaccinationCheckbox.displayName = "VaccinationCheckbox";
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export default function SearchBar() {
   const router = useRouter();
 
-  // --- Placeholder Constants ---
-  const ALL_TAB_PLACEHOLDER = "Оберіть тип житла";
-  const BREED_PLACEHOLDER = "Оберіть породу";
-  const LOCATION_PLACEHOLDER = "Уся Україна";
-  const AGE_PLACEHOLDER = "Вік";
+  // Memoized selectable options to include placeholders
+  const selectableLocationOptions = useMemo(
+    () => [
+      { id: "all-ukraine", label: CONSTANTS.LOCATION_PLACEHOLDER },
+      ...STATIC_DATA.locationOptions,
+    ],
+    []
+  );
 
-  // --- Static Filter Options Data ---
-  const housingOptionsData: FilterOption[] = [
-    { id: "apartment", label: "Можна утримувати в квартирі" },
-    { id: "house", label: "Можна утримувати в будинку" },
-    { id: "outdoor", label: "Можна утримувати на вулиці" },
-  ];
-
-  const dogBreedOptionsData: FilterOption[] = [
-    { id: "german-shepherd", label: "Німецька вівчарка" },
-    { id: "yorkshire-terrier", label: "Йоркширський тер'єр" },
-    { id: "labrador-retriever", label: "Лабрадор ретривер" },
-    { id: "chihuahua", label: "Чихуахуа" },
-    { id: "french-bulldog", label: "Французький бульдог" },
-  ];
-
-  const catBreedOptionsData: FilterOption[] = [
-    { id: "british-shorthair", label: "Британська короткошерста" },
-    { id: "maine-coon", label: "Мейн-кун" },
-    { id: "scottish-fold", label: "Шотландська висловуха" },
-    { id: "sphynx", label: "Сфінкс" },
-    { id: "bengal", label: "Бенгальська" },
-  ];
-
-  const locationOptions: FilterOption[] = [
-    { id: "kyiv", label: "Київ" },
-    { id: "lviv", label: "Львів" },
-    { id: "odesa", label: "Одеса" },
-    { id: "kharkiv", label: "Харків" },
-  ];
-  const selectableLocationOptions: FilterOption[] = [
-    { id: "all-ukraine", label: LOCATION_PLACEHOLDER },
-    ...locationOptions,
-  ];
-
-  const ageOptionsData: FilterOption[] = [
-    { id: "puppy", label: "До 1 року" },
-    { id: "young", label: "1-3 роки" },
-    { id: "adult", label: "3-8 років" },
-    { id: "senior", label: "Від 8 років" },
-  ];
-
-  const selectableAgeOptions: FilterOption[] = [
-    { id: "any-age", label: AGE_PLACEHOLDER },
-    ...ageOptionsData,
-  ];
+  const selectableAgeOptions = useMemo(
+    () => [
+      { id: "any-age", label: CONSTANTS.AGE_PLACEHOLDER },
+      ...STATIC_DATA.ageOptions,
+    ],
+    []
+  );
 
   // --- State for the dynamic primary filter ---
   const [primaryFilterSelectedValue, setPrimaryFilterSelectedValue] =
-    useState<string>(ALL_TAB_PLACEHOLDER);
-  const [primaryFilterOptions, setPrimaryFilterOptions] =
-    useState<FilterOption[]>(housingOptionsData);
+    useState<string>(CONSTANTS.ALL_TAB_PLACEHOLDER);
+  const [primaryFilterOptions, setPrimaryFilterOptions] = useState<
+    FilterOption[]
+  >(STATIC_DATA.housingOptions);
   const [primaryFilterIcon, setPrimaryFilterIcon] = useState<string>(pawPrint);
   const [primaryFilterIconAlt, setPrimaryFilterIconAlt] =
     useState<string>("Housing type");
   const [primaryFilterName, setPrimaryFilterName] = useState<string>("housing");
   const [currentPrimaryPlaceholder, setCurrentPrimaryPlaceholder] =
-    useState<string>(ALL_TAB_PLACEHOLDER);
+    useState<string>(CONSTANTS.ALL_TAB_PLACEHOLDER);
 
   // --- Other filter states ---
-  const [locationFilter, setLocationFilter] =
-    useState<string>(LOCATION_PLACEHOLDER);
-  const [ageFilter, setAgeFilter] = useState<string>(AGE_PLACEHOLDER);
+  const [locationFilter, setLocationFilter] = useState<string>(
+    CONSTANTS.LOCATION_PLACEHOLDER
+  );
+  const [ageFilter, setAgeFilter] = useState<string>(CONSTANTS.AGE_PLACEHOLDER);
   const [vaccinated, setVaccinated] = useState<boolean>(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -332,51 +354,51 @@ export default function SearchBar() {
     let newPlaceholder: string;
 
     if (activeTab === "all") {
-      newOptions = housingOptionsData;
+      newOptions = STATIC_DATA.housingOptions;
       newIcon = pawPrint;
       newIconAlt = "Housing type";
       newName = "housing";
-      newPlaceholder = ALL_TAB_PLACEHOLDER;
+      newPlaceholder = CONSTANTS.ALL_TAB_PLACEHOLDER;
 
       if (
-        !housingOptionsData.some(
+        !STATIC_DATA.housingOptions.some(
           (opt) => opt.label === primaryFilterSelectedValue
         ) &&
-        primaryFilterSelectedValue !== ALL_TAB_PLACEHOLDER
+        primaryFilterSelectedValue !== CONSTANTS.ALL_TAB_PLACEHOLDER
       ) {
-        newSelectedValue = ALL_TAB_PLACEHOLDER;
+        newSelectedValue = CONSTANTS.ALL_TAB_PLACEHOLDER;
       } else {
         newSelectedValue = primaryFilterSelectedValue;
       }
     } else if (activeTab === "dog") {
-      newOptions = dogBreedOptionsData;
+      newOptions = STATIC_DATA.dogBreedOptions;
       newIcon = dogIcon;
       newIconAlt = "Dog breed";
       newName = "breedDog";
-      newPlaceholder = BREED_PLACEHOLDER;
+      newPlaceholder = CONSTANTS.BREED_PLACEHOLDER;
       if (
-        !dogBreedOptionsData.some(
+        !STATIC_DATA.dogBreedOptions.some(
           (opt) => opt.label === primaryFilterSelectedValue
         ) &&
-        primaryFilterSelectedValue !== BREED_PLACEHOLDER
+        primaryFilterSelectedValue !== CONSTANTS.BREED_PLACEHOLDER
       ) {
-        newSelectedValue = BREED_PLACEHOLDER;
+        newSelectedValue = CONSTANTS.BREED_PLACEHOLDER;
       } else {
         newSelectedValue = primaryFilterSelectedValue;
       }
     } else {
-      newOptions = catBreedOptionsData;
+      newOptions = STATIC_DATA.catBreedOptions;
       newIcon = catIcon;
       newIconAlt = "Cat breed";
       newName = "breedCat";
-      newPlaceholder = BREED_PLACEHOLDER;
+      newPlaceholder = CONSTANTS.BREED_PLACEHOLDER;
       if (
-        !catBreedOptionsData.some(
+        !STATIC_DATA.catBreedOptions.some(
           (opt) => opt.label === primaryFilterSelectedValue
         ) &&
-        primaryFilterSelectedValue !== BREED_PLACEHOLDER
+        primaryFilterSelectedValue !== CONSTANTS.BREED_PLACEHOLDER
       ) {
-        newSelectedValue = BREED_PLACEHOLDER;
+        newSelectedValue = CONSTANTS.BREED_PLACEHOLDER;
       } else {
         newSelectedValue = primaryFilterSelectedValue;
       }
@@ -390,7 +412,7 @@ export default function SearchBar() {
     setPrimaryFilterSelectedValue(newSelectedValue);
 
     setActiveDropdown(null); // Close dropdown when tab changes
-  }, [activeTab]); // Only depend on activeTab
+  }, [activeTab, primaryFilterSelectedValue]); // Now includes primaryFilterSelectedValue
 
   // --- Dropdown toggle handlers ---
   const togglePrimaryFilterDropdown = useCallback(() => {
@@ -442,11 +464,11 @@ export default function SearchBar() {
       }
     }
 
-    if (locationFilter !== LOCATION_PLACEHOLDER) {
+    if (locationFilter !== CONSTANTS.LOCATION_PLACEHOLDER) {
       queryParams.set("location", locationFilter);
     }
 
-    if (ageFilter !== AGE_PLACEHOLDER) {
+    if (ageFilter !== CONSTANTS.AGE_PLACEHOLDER) {
       queryParams.set("age", ageFilter);
     }
 
@@ -465,16 +487,10 @@ export default function SearchBar() {
     router,
   ]);
 
-  const categoryTabs = [
-    { id: "all", label: "Усі" },
-    { id: "dog", label: "Собаки" },
-    { id: "cat", label: "Коти" },
-  ];
-
   return (
     <div className="w-full">
       <div className="flex mb-4 gap-[6px] inline-flex">
-        {categoryTabs.map((tab) => (
+        {STATIC_DATA.categoryTabs.map((tab) => (
           <CategoryTab
             key={tab.id}
             id={tab.id}
@@ -507,7 +523,7 @@ export default function SearchBar() {
           icon={mapPin}
           iconAlt="Location"
           name="location"
-          placeholder={LOCATION_PLACEHOLDER}
+          placeholder={CONSTANTS.LOCATION_PLACEHOLDER}
         />
 
         <FilterDropdown
@@ -517,7 +533,7 @@ export default function SearchBar() {
           onChange={handleAgeChange}
           onToggle={toggleAgeDropdown}
           name="age"
-          placeholder={AGE_PLACEHOLDER}
+          placeholder={CONSTANTS.AGE_PLACEHOLDER}
         />
 
         <button

@@ -1,39 +1,52 @@
+import ky, { HTTPError, TimeoutError, type KyInstance, type Options } from "ky";
 import Cookies from "js-cookie";
-
 import { BASE_API_URL } from "@/lib/api/constants";
-import { FetchError, BackendErrorResponse, ApiError } from "@/lib/types/errors";
-import {
-  isDjangoNinjaErrorResponse,
-  isDjangoNotFoundError,
-  isDjango422Response,
-  isDjangoErrorResponseDetailArray,
-  isValidationError,
-  isApiError,
-} from "@/lib/types/type-guards";
+import { ApiErrorFactory } from "./errors";
+
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE"
+  | "HEAD"
+  | "OPTIONS";
+
+function isValidHttpMethod(method: string | undefined): method is HttpMethod {
+  return (
+    method !== undefined &&
+    ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].includes(
+      method.toUpperCase()
+    )
+  );
+}
 
 /**
  * Retrieves CSRF token from cookies or fetches it from the backend if not present.
- * @returns The CSRF token as a string.
- * @throws {FetchError} If fetching the CSRF token fails.
  */
 async function getCSRFToken(): Promise<string> {
   let csrfToken = Cookies.get("csrftoken");
 
   if (!csrfToken) {
-    const response = await fetch(`${BASE_API_URL}/api/v1/auth/csrf`, {
-      method: "GET",
-      credentials: "include", // Ensure cookies are included in the request
-    });
+    try {
+      await ky.get(`${BASE_API_URL}/api/v1/auth/csrf`, {
+        credentials: "include",
+      });
 
-    if (response.ok) {
-      // The backend should set the 'csrftoken' cookie in the response
       csrfToken = Cookies.get("csrftoken");
-      console.log("CSRF token fetched:", csrfToken);
+
       if (!csrfToken) {
-        throw new FetchError("CSRF token not found in response");
+        throw new Error("CSRF token not found in response");
       }
-    } else {
-      throw new FetchError("Failed to fetch CSRF token", response.status);
+    } catch (error: unknown) {
+      if (error instanceof HTTPError) {
+        throw ApiErrorFactory.createFromResponse(null, error.response.status);
+      }
+      throw ApiErrorFactory.createFromResponse(null, 500);
     }
   }
 
@@ -41,159 +54,188 @@ async function getCSRFToken(): Promise<string> {
 }
 
 /**
- * Normalizes backend error responses into ApiError.
- * @param errorResponse The raw error response from the backend.
- * @returns An ApiError object.
+ * Creates a configured ky instance with enhanced error handling
  */
-function normalizeError(errorResponse: BackendErrorResponse): ApiError {
-  if (isDjangoNotFoundError(errorResponse)) {
-    // Django Not Found Error
-    return {
-      status: 404,
-      message: "Resource not found.",
-    };
-  }
+function createApiClient(): KyInstance {
+  return ky.create({
+    prefixUrl: BASE_API_URL,
+    credentials: "include",
+    timeout: 30000,
 
-  if (isDjangoNinjaErrorResponse(errorResponse)) {
-    // Django Ninja Error Response
-    return {
-      status: 400,
-      message: errorResponse.message,
-    };
-  }
+    retry: {
+      limit: 3,
+      methods: ["get", "put", "head", "delete", "options", "trace"],
+      statusCodes: [408, 413, 429, 500, 502, 503, 504],
+      backoffLimit: 3000,
+    },
 
-  if (isDjango422Response(errorResponse)) {
-    // Django 422 Error Response
-    return {
-      status: 422,
-      message: errorResponse.detail.map((err) => err.ctx.error).join(", "),
-    };
-  }
+    headers: {
+      Accept: "application/json",
+    },
 
-  if (isDjangoErrorResponseDetailArray(errorResponse)) {
-    // Django Error Response Detail Array
-    return {
-      status: 400, // Assuming Bad Request; adjust as needed
-      message: errorResponse.map((err) => err.ctx.error).join(", "),
-    };
-  }
+    hooks: {
+      beforeRequest: [
+        async (request) => {
+          if (request.method !== "GET") {
+            try {
+              const csrfToken = await getCSRFToken();
+              request.headers.set("X-CSRFToken", csrfToken);
 
-  if (isValidationError(errorResponse)) {
-    const error = errorResponse as {
-      status: number;
-      message: string;
-      code?: string;
-      errors?: unknown;
-    };
-    // Validation Error
-    return {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.errors,
-    };
-  }
+              if (!request.headers.has("Content-Type") && request.body) {
+                request.headers.set("Content-Type", "application/json");
+              }
+            } catch (error) {
+              console.error("Failed to get CSRF token:", error);
+              throw error;
+            }
+          }
+        },
+      ],
 
-  if (isApiError(errorResponse)) {
-    const error = errorResponse as {
-      status: number;
-      message: string;
-      code?: string;
-      details?: unknown;
-    };
-    // ApiError
-    return {
-      status: error.status,
-      message: error.message,
-      code: error.code,
-      details: error.details,
-    };
-  }
+      beforeRetry: [
+        async ({ request, error, retryCount }) => {
+          console.warn(
+            `Retrying request to ${request.url} (attempt ${retryCount + 1}):`,
+            error
+          );
 
-  // Fallback for any other unexpected error structure
-  return {
-    status: 500,
-    message: "An unexpected error occurred.",
-  };
+          if (error instanceof HTTPError && error.response.status === 403) {
+            Cookies.remove("csrftoken");
+          }
+        },
+      ],
+
+      beforeError: [
+        async (error: unknown) => {
+          if (error instanceof HTTPError) {
+            let errorData: unknown = null;
+
+            const contentType = error.response.headers.get("Content-Type");
+            if (contentType?.includes("application/json")) {
+              try {
+                errorData = await error.response.json();
+              } catch (parseError) {
+                console.error(
+                  "Failed to parse error response as JSON:",
+                  parseError
+                );
+              }
+            }
+
+            // Use the centralized error factory
+            throw ApiErrorFactory.createFromResponse(
+              errorData,
+              error.response.status
+            );
+          }
+
+          if (error instanceof TimeoutError) {
+            throw ApiErrorFactory.createFromResponse(
+              { message: "Request timeout" },
+              408
+            );
+          }
+
+          // Network errors
+          throw ApiErrorFactory.createFromResponse(
+            { message: "Network error occurred" },
+            0
+          );
+        },
+      ],
+    },
+  });
 }
 
+// Create the main API client instance
+const apiClient = createApiClient();
+
 /**
- * Centralized fetch wrapper with CSRF token handling and error management.
- * Automatically includes 'X-CSRFToken' header for non-GET requests.
- * @param url The URL to fetch.
- * @param init Optional fetch configuration.
- * @returns The response data parsed as JSON.
- * @throws {FetchError} If the network response is not ok.
+ * Enhanced API client with centralized error handling
  */
+export const api = {
+  async request<T>(url: string, options?: Options): Promise<T> {
+    try {
+      return await apiClient(url, options).json<T>();
+    } catch (error: unknown) {
+      console.error("API request error:", error);
+      throw error; // Will be a BaseApiError thanks to beforeError hook
+    }
+  },
+
+  async get<T>(url: string, options?: Options): Promise<T> {
+    return this.request<T>(url, { ...options, method: "GET" });
+  },
+
+  async post<T>(url: string, json?: unknown, options?: Options): Promise<T> {
+    return this.request<T>(url, {
+      ...options,
+      method: "POST",
+      json,
+    });
+  },
+
+  async put<T>(url: string, json?: unknown, options?: Options): Promise<T> {
+    return this.request<T>(url, {
+      ...options,
+      method: "PUT",
+      json,
+    });
+  },
+
+  async patch<T>(url: string, json?: unknown, options?: Options): Promise<T> {
+    return this.request<T>(url, {
+      ...options,
+      method: "PATCH",
+      json,
+    });
+  },
+
+  async delete<T>(url: string, options?: Options): Promise<T> {
+    return this.request<T>(url, { ...options, method: "DELETE" });
+  },
+
+  async stream(url: string, options?: Options): Promise<Response> {
+    return apiClient(url, options);
+  },
+
+  async text(url: string, options?: Options): Promise<string> {
+    return apiClient(url, options).text();
+  },
+
+  async blob(url: string, options?: Options): Promise<Blob> {
+    return apiClient(url, options).blob();
+  },
+
+  async arrayBuffer(url: string, options?: Options): Promise<ArrayBuffer> {
+    return apiClient(url, options).arrayBuffer();
+  },
+
+  create(options: Options): KyInstance {
+    return apiClient.create(options);
+  },
+
+  extend(options: Options): KyInstance {
+    return apiClient.extend(options);
+  },
+};
+
+// Backward compatibility (deprecated)
 export async function safeFetch<T>(
   url: string,
   init?: RequestInit
 ): Promise<T> {
-  try {
-    const config: RequestInit = {
-      ...init,
-      credentials: "include", // Ensure cookies are sent with the request
-      headers: {
-        ...(init?.headers || {}),
-      },
-    };
+  console.warn(
+    "safeFetch is deprecated. Use api.request() or specific methods instead."
+  );
 
-    // Include CSRF token for non-GET requests
-    if (config.method && config.method.toUpperCase() !== "GET") {
-      const csrfToken = await getCSRFToken();
+  const options: Options = {
+    method: isValidHttpMethod(init?.method) ? init.method : "GET",
+    headers: init?.headers,
+    body: init?.body,
+  };
 
-      // Ensure headers are of type Record<string, string> for dynamic keys
-      const headers = config.headers as Record<string, string>;
-
-      headers["X-CSRFToken"] = csrfToken;
-
-      // Set 'Content-Type' to 'application/json' if not already set
-      if (!headers["Content-Type"]) {
-        headers["Content-Type"] = "application/json";
-      }
-
-      config.headers = headers;
-    }
-
-    const res = await fetch(url, config);
-
-    if (!res.ok) {
-      let errorInfo: BackendErrorResponse | null = null;
-
-      if (res.headers.get("Content-Type")?.includes("application/json")) {
-        try {
-          errorInfo = await res.json();
-        } catch {
-          console.error("Failed to parse error response as JSON");
-        }
-      }
-
-      const normalizedError = errorInfo
-        ? normalizeError(errorInfo)
-        : {
-            status: res.status,
-            message: res.statusText || "An unknown error occurred.",
-          };
-
-      throw new FetchError(
-        normalizedError.message,
-        normalizedError.status,
-        normalizedError
-      );
-    }
-
-    // Handle no content response
-    if (res.status === 204) {
-      return {} as T;
-    }
-
-    return (await res.json()) as T;
-  } catch (error) {
-    console.error("safeFetch error:", error);
-    if (error instanceof FetchError) {
-      throw error;
-    }
-    // Wrap other errors into FetchError
-    throw new FetchError("Network error occurred");
-  }
+  return api.request<T>(url, options);
 }
+
+export default api;

@@ -61,7 +61,7 @@ export default function Header() {
   const headerBaseClasses =
     "p-2 sticky top-0 z-[49] transition-colors duration-300 ease-in-out";
   const headerDynamicClasses = isAlternateDesign
-    ? "bg-white rounded-b-[24px] mb-[2px]"
+    ? "bg-white rounded-b-[17px] mb-[2px]"
     : "bg-[#CCF28C]";
 
   const addAnnouncementLinkBaseClasses =

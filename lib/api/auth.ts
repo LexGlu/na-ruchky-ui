@@ -1,8 +1,13 @@
-import { safeFetch } from "@/lib/api/request";
+import api from "@/lib/api/request";
+import {
+  BaseApiError,
+  ValidationError,
+  UnauthorizedError,
+  ConflictError,
+  ServerError,
+  NetworkError,
+} from "@/lib/api/errors";
 import { User } from "@/lib/types/user";
-import { FetchError } from "@/lib/types/errors";
-
-import { BASE_API_URL } from "@/lib/api/constants";
 
 /**
  * Data structure for user registration.
@@ -16,26 +21,39 @@ interface RegisterData {
 }
 
 /**
- * Authentication Service encapsulating all auth-related API calls.
- * Adheres to the Single Responsibility Principle by handling only authentication logic.
+ * Response types for authentication operations
+ */
+interface AuthResponse {
+  message: string;
+  user?: User;
+  token?: string;
+}
+
+interface LoginResponse {
+  message: string;
+  user: User;
+  access_token?: string;
+}
+
+/**
+ * Enhanced Authentication Service using the new centralized API system.
+ * Provides clean error handling and type safety for all auth operations.
  */
 class AuthService {
   /**
    * Logs in the user with email and password.
    * @param email User's email
    * @param password User's password
+   * @returns Login response with user data
    */
-  async loginUser(email: string, password: string): Promise<void> {
+  async loginUser(email: string, password: string): Promise<LoginResponse> {
     try {
-      await safeFetch<{ message: string }>(
-        `${BASE_API_URL}/api/v1/auth/login`,
-        {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      return await api.post<LoginResponse>("api/v1/auth/login", {
+        email,
+        password,
+      });
     } catch (error) {
-      this.handleAuthError(error);
+      throw this.enhanceAuthError(error, "login");
     }
   }
 
@@ -44,22 +62,18 @@ class AuthService {
    */
   async logoutUser(): Promise<void> {
     try {
-      await safeFetch<{ message: string }>(
-        `${BASE_API_URL}/api/v1/auth/logout`,
-        {
-          method: "POST",
-        }
-      );
+      await api.post<AuthResponse>("api/v1/auth/logout");
     } catch (error) {
-      this.handleAuthError(error);
+      throw this.enhanceAuthError(error, "logout");
     }
   }
 
   /**
    * Registers a new user account.
    * @param data Registration data
+   * @returns Registration response with user data
    */
-  async registerUser(data: RegisterData): Promise<void> {
+  async registerUser(data: RegisterData): Promise<LoginResponse> {
     const payload = {
       email: data.email,
       password: data.password,
@@ -67,34 +81,26 @@ class AuthService {
       last_name: data.lastName,
       phone: data.phone,
     };
+
     try {
-      await safeFetch<{ message: string }>(
-        `${BASE_API_URL}/api/v1/auth/register`,
-        {
-          method: "POST",
-          body: JSON.stringify(payload),
-        }
-      );
+      return await api.post<LoginResponse>("api/v1/auth/register", payload);
     } catch (error) {
-      this.handleAuthError(error);
+      throw this.enhanceAuthError(error, "registration");
     }
   }
 
   /**
    * Authenticate user using Google OAuth token
    * @param token Google OAuth access token
+   * @returns Login response with user data
    */
-  async googleLogin(token: string): Promise<void> {
+  async googleLogin(token: string): Promise<LoginResponse> {
     try {
-      await safeFetch<{ message: string }>(
-        `${BASE_API_URL}/api/v1/auth/google-login`,
-        {
-          method: "POST",
-          body: JSON.stringify({ token }),
-        }
-      );
+      return await api.post<LoginResponse>("api/v1/auth/google-login", {
+        token,
+      });
     } catch (error) {
-      this.handleAuthError(error);
+      throw this.enhanceAuthError(error, "Google login");
     }
   }
 
@@ -104,30 +110,180 @@ class AuthService {
    */
   async fetchCurrentUser(): Promise<User | null> {
     try {
-      return await safeFetch<User>(`${BASE_API_URL}/api/v1/users/me`, {
-        method: "GET",
-      });
+      return await api.get<User>("api/v1/users/me");
     } catch (error) {
-      const fetchError = error as FetchError;
-      if (fetchError.status === 401) {
+      // Handle unauthenticated users gracefully
+      if (error instanceof UnauthorizedError) {
         return null;
       }
-      throw error;
+      throw this.enhanceAuthError(error, "fetch current user");
     }
   }
 
   /**
-   * Handles authentication-related errors by re-throwing them or processing as needed.
-   * @param error The error thrown during authentication operations.
+   * Request password reset email
+   * @param email User's email address
    */
-  private handleAuthError(error: unknown): never {
-    if (error instanceof FetchError) {
-      console.error("Authentication error:", error.message, error.info);
-      throw error;
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    try {
+      return await api.post<{ message: string }>(
+        "api/v1/auth/password-reset/",
+        {
+          email,
+        }
+      );
+    } catch (error) {
+      throw this.enhanceAuthError(error, "password reset request");
     }
-    // Wrapper for unexpected errors
-    throw new FetchError("An unexpected error occurred during authentication.");
+  }
+
+  /**
+   * Confirm password reset with token
+   * @param token Reset token from email
+   * @param newPassword New password
+   */
+  async confirmPasswordReset(
+    token: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    try {
+      return await api.post<{ message: string }>(
+        "api/v1/auth/password-reset/confirm",
+        {
+          token,
+          new_password: newPassword,
+        }
+      );
+    } catch (error) {
+      throw this.enhanceAuthError(error, "password reset");
+    }
+  }
+
+  /**
+   * Change user password
+   * @param currentPassword Current password
+   * @param newPassword New password
+   */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    try {
+      return await api.post<{ message: string }>(
+        "api/v1/auth/change-password",
+        {
+          current_password: currentPassword,
+          new_password: newPassword,
+        }
+      );
+    } catch (error) {
+      throw this.enhanceAuthError(error, "password change");
+    }
+  }
+
+  /**
+   * Verify email address with token
+   * @param token Verification token from email
+   */
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    try {
+      return await api.post<{ message: string }>("api/v1/auth/verify-email", {
+        token,
+      });
+    } catch (error) {
+      throw this.enhanceAuthError(error, "email verification");
+    }
+  }
+
+  /**
+   * Resend email verification
+   */
+  async resendEmailVerification(): Promise<{ message: string }> {
+    try {
+      return await api.post<{ message: string }>(
+        "api/v1/auth/resend-verification"
+      );
+    } catch (error) {
+      throw this.enhanceAuthError(error, "resend email verification");
+    }
+  }
+
+  /**
+   * Refresh authentication token
+   * @param refreshToken Refresh token
+   */
+  async refreshToken(
+    refreshToken: string
+  ): Promise<{ access_token: string; refresh_token?: string }> {
+    try {
+      return await api.post<{ access_token: string; refresh_token?: string }>(
+        "api/v1/auth/refresh",
+        {
+          refresh_token: refreshToken,
+        }
+      );
+    } catch (error) {
+      throw this.enhanceAuthError(error, "token refresh");
+    }
+  }
+
+  /**
+   * Enhanced error handler that provides context-specific error messages
+   * @param error The error from the API
+   * @param operation The operation that failed (for context)
+   */
+  private enhanceAuthError(error: unknown, operation: string): BaseApiError {
+    if (error instanceof ValidationError) {
+      // Add operation context to validation errors
+      return new ValidationError(
+        `${operation} failed: ${error.message}`,
+        error.fieldErrors,
+        error.details
+      );
+    }
+
+    if (error instanceof UnauthorizedError) {
+      return new UnauthorizedError(
+        `${operation} failed: Invalid credentials or session expired`
+      );
+    }
+
+    if (error instanceof ConflictError) {
+      // Common in registration when user already exists
+      return new ConflictError(
+        `${operation} failed: ${error.message}`,
+        error.details
+      );
+    }
+
+    if (error instanceof NetworkError) {
+      return new NetworkError(`${operation} failed: Network connection error`);
+    }
+
+    if (error instanceof ServerError) {
+      return new ServerError(
+        `${operation} failed: Server error occurred`,
+        error.details
+      );
+    }
+
+    if (error instanceof BaseApiError) {
+      // Re-throw other API errors as-is
+      return error;
+    }
+
+    // Fallback for unexpected errors
+    console.error(`Unexpected error during ${operation}:`, error);
+    return new ServerError(`An unexpected error occurred during ${operation}`);
   }
 }
 
+/**
+ * Higher-level auth functions with enhanced error handling for common use cases
+ */
+
+// Export the main service instance
 export const authService = new AuthService();
+
+// Export types for external use
+export type { RegisterData, AuthResponse, LoginResponse };
