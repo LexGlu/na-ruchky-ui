@@ -19,8 +19,8 @@ const baseUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Pet Directory - Find Your Perfect Companion",
-    template: "%s | Pet Directory",
+    default: "Na.Ruchky - Find Your Perfect Companion",
+    template: "%s | Na.Ruchky",
   },
   description:
     "Discover thousands of pets and breeds. Find your perfect companion through our comprehensive pet directory.",
@@ -31,14 +31,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: baseUrl,
-    siteName: "Pet Directory",
-    title: "Pet Directory - Find Your Perfect Companion",
+    siteName: "Na.Ruchky",
+    title: "Na.Ruchky - Find Your Perfect Companion",
     description:
       "Discover thousands of pets and breeds. Find your perfect companion through our comprehensive pet directory.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pet Directory",
+    title: "Na.Ruchky - Find Your Perfect Companion",
     description: "Find your perfect pet companion",
   },
   robots: {
