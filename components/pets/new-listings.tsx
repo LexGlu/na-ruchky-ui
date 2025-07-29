@@ -1,10 +1,12 @@
 import { NewListingsClient } from "./new-listings.client";
 import { getNewPetListingsCache } from "@/lib/cache/pets.cache";
+import { getTranslations } from "next-intl/server";
 
 export const revalidate = 1800; // 30 minutes for new listings (more frequent updates)
 export const dynamic = "force-static";
 
 export default async function NewListings() {
+  const t = await getTranslations("NewListings");
   // Fetch new pet listings from cache
   const newPets = await getNewPetListingsCache();
 
@@ -14,7 +16,7 @@ export default async function NewListings() {
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <div>
             <h2 className="font-geologica font-bold text-2xl sm:text-3xl md:text-4xl text-black mb-2">
-              Нові оголошення
+              {t("title")}
             </h2>
           </div>
         </div>

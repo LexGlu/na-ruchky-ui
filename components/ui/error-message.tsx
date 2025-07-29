@@ -1,4 +1,7 @@
+"use client";
+
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ErrorMessageProps {
   error: string;
@@ -11,6 +14,8 @@ const ErrorMessage = ({
   onRetry,
   isRetrying = false,
 }: ErrorMessageProps) => {
+  const t = useTranslations("Common");
+
   return (
     <div className="p-5 mb-6 bg-white border border-red-200 rounded-2xl shadow-sm">
       <div className="flex items-start gap-3">
@@ -20,7 +25,7 @@ const ErrorMessage = ({
 
         <div className="flex-1">
           <h3 className="mb-1 text-lg font-medium text-gray-900">
-            Не вдалося завантажити дані
+            {t("error")}
           </h3>
 
           <p className="mb-4 text-gray-600">
@@ -32,16 +37,17 @@ const ErrorMessage = ({
             <button
               className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-full hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               onClick={onRetry}
-              disabled={isRetrying}>
+              disabled={isRetrying}
+            >
               {isRetrying ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Завантаження...
+                  {t("retrying")}
                 </>
               ) : (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Спробувати ще раз
+                  {t("retry")}
                 </>
               )}
             </button>

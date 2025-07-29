@@ -2,6 +2,7 @@
 
 import React, { PropsWithChildren } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { NavLink } from "@/components/header/data";
 
 interface MobileNavProps extends PropsWithChildren {
@@ -20,6 +21,8 @@ export default function MobileNav({
   onClose,
   children,
 }: MobileNavProps) {
+  const t = useTranslations();
+
   return (
     <div
       className={`
@@ -39,7 +42,7 @@ export default function MobileNav({
             onClick={onClose}
             className="block text-black hover:text-gray-700 px-3 py-2 rounded-md"
           >
-            {link.label}
+            {t(link.labelKey)}
           </Link>
         ))}
       </div>

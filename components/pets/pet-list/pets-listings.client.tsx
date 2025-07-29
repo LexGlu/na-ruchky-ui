@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import PetsFilter from "@/components/pets/pet-filter";
 import PetList from "@/components/pets/pet-list";
 import ErrorMessage from "@/components/ui/error-message";
@@ -149,6 +150,7 @@ export function PetsListingsClient({
   itemsPerPage = 12,
   enableApiFiltering = true,
 }: PetsListingsClientProps) {
+  const t = useTranslations("PetListings");
   const searchParams = useSearchParams();
 
   // ============================================================================
@@ -291,18 +293,13 @@ export function PetsListingsClient({
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
         <div className="text-sm text-gray-600">
           <span>
-            Showing {displayedPets.length} of {totalCount} results
+            {t("showing")} {displayedPets.length} {t("of")} {totalCount}{" "}
+            {t("results")}
           </span>
-          {totalCount < staticData.totalCount && (
-            <span className="ml-2 text-blue-600">• Filtered</span>
-          )}
-          {shouldUseApi && (
-            <span className="ml-2 text-orange-600">• API Query</span>
-          )}
         </div>
 
         <div className="text-xs text-gray-400">
-          Updated: {new Date(staticData.lastUpdated).toLocaleTimeString()}
+          {t("updated")} {new Date(staticData.lastUpdated).toLocaleTimeString()}
         </div>
       </div>
 
@@ -324,36 +321,6 @@ export function PetsListingsClient({
           itemsPerPage={itemsPerPage}
           totalAdopted={245}
         />
-      )}
-
-      {/* Performance Indicator (Development) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-          <div className="text-xs text-gray-600 space-y-1">
-            <div className="flex justify-between">
-              <span>Strategy:</span>
-              <span
-                className={shouldUseApi ? "text-orange-600" : "text-green-600"}
-              >
-                {shouldUseApi ? "API Filtering" : "Client-side Filtering"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Complexity:</span>
-              <span>{filteringStrategy.complexity}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Static data:</span>
-              <span>{staticData.pets.length} pets cached</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Current results:</span>
-              <span>
-                {totalCount} total, {displayedPets.length} displayed
-              </span>
-            </div>
-          </div>
-        </div>
       )}
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, ArrowRight, SearchX, Heart } from "lucide-react";
+import { useTranslations } from "next-intl";
 import NewPetCard from "@/components/pets/new-pet-card";
 import { PetListing } from "@/lib/types/pets";
 
@@ -10,6 +11,7 @@ interface NewListingsClientProps {
 }
 
 export function NewListingsClient({ pets }: NewListingsClientProps) {
+  const t = useTranslations("NewListings");
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -62,15 +64,14 @@ export function NewListingsClient({ pets }: NewListingsClientProps) {
           <SearchX size={36} className="text-gray-400" />
         </div>
         <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          Наразі немає нових оголошень
+          {t("noListings")}
         </h3>
         <p className="text-gray-500 max-w-md text-center leading-relaxed">
-          Заходьте пізніше або перегляньте наші поточні оголошення. Нові друзі
-          з`&apos;`являються кожного дня!
+          {t("noListingsSub")}
         </p>
         <div className="mt-4 flex items-center gap-2 text-sm text-gray-400">
           <Heart size={16} />
-          <span>Оновлюється кожні 30 хвилин</span>
+          <span>{t("updatesEvery")}</span>
         </div>
       </div>
     );
@@ -86,7 +87,7 @@ export function NewListingsClient({ pets }: NewListingsClientProps) {
                      bg-white/95 backdrop-blur-sm rounded-full p-3 shadow-lg border border-gray-200
                      hover:bg-white hover:shadow-xl transition-all duration-200
                      opacity-0 group-hover:opacity-100 focus:opacity-100"
-          aria-label="Прокрутити вліво"
+          aria-label={t("scrollLeft")}
         >
           <ArrowLeft size={20} className="text-gray-700" />
         </button>
@@ -100,7 +101,7 @@ export function NewListingsClient({ pets }: NewListingsClientProps) {
                      bg-white/95 backdrop-blur-sm rounded-full p-3 shadow-lg border border-gray-200
                      hover:bg-white hover:shadow-xl transition-all duration-200 
                      opacity-0 group-hover:opacity-100 focus:opacity-100"
-          aria-label="Прокрутити вправо"
+          aria-label={t("scrollRight")}
         >
           <ArrowRight size={20} className="text-gray-700" />
         </button>

@@ -1,11 +1,11 @@
 export interface NavLink {
-  label: string;
+  labelKey: string; // Translation key instead of hardcoded text
   href: string;
 }
 
 export const navLinks: NavLink[] = [
   {
-    label: "Наші працівники",
+    labelKey: "Header.navigation.employees",
     href: "/employees",
   },
 ];

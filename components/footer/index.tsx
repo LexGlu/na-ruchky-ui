@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import FooterNav from "@/components/footer/footer-nav";
 import FooterAddListingButton from "@/components/footer/add-listing-btn";
@@ -10,6 +11,8 @@ import Mascots from "@/components/header/mascots";
 import FooterLogoImage from "@/public/logo-footer.svg";
 
 export default function Footer() {
+  const t = useTranslations("Footer");
+
   return (
     <footer
       className="flex flex-col bg-white w-full border-t border-gray-200 p-1 mt-1 rounded-t-[20px] overflow-hidden 
@@ -42,18 +45,16 @@ export default function Footer() {
           className="w-full flex flex-col items-center text-center gap-4 
                         md:flex-row md:justify-between md:items-center md:text-left text-black"
         >
-          <span className="text-sm">
-            © 2025 Na.ruchky. All rights reserved.
-          </span>
+          <span className="text-sm">{t("copyright")}</span>
           <div
             className="flex flex-col items-center gap-3 
                           sm:flex-row sm:gap-6 lg:gap-[86px]"
           >
             <Link href="/privacy" className="text-sm hover:text-gray-700">
-              Політика конфіденційності
+              {t("navigation.privacyPolicy")}
             </Link>
             <Link href="/terms" className="text-sm hover:text-gray-700">
-              Договір публічної оферти
+              {t("navigation.publicOffer")}
             </Link>
           </div>
         </div>

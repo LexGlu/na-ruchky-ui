@@ -4,6 +4,7 @@ import { useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PawPrint } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Breed } from "@/lib/types/breeds";
 import { getImageUrl } from "@/lib/utils/get-image-url";
@@ -19,6 +20,7 @@ interface BreedsClientProps {
 }
 
 export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
+  const t = useTranslations("BreedsSection");
   const [activeSpecies, setActiveSpecies] = useState<Species | "all">("all");
   const [hoveredBreedId, setHoveredBreedId] = useState<string | null>(null);
 
@@ -69,8 +71,8 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
   ) => {
     const isActive = activeSpecies === filterSpecies;
     let buttonText = "";
-    if (filterSpecies === "dog") buttonText = "Собаки";
-    else if (filterSpecies === "cat") buttonText = "Кішки";
+    if (filterSpecies === "dog") buttonText = t("dogs");
+    else if (filterSpecies === "cat") buttonText = t("cats");
 
     return (
       <button
@@ -98,14 +100,13 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
                          md:text-6xl md:leading-tight 
                          lg:text-[80px] lg:leading-[1em] text-black"
             >
-              Кожен на&nbsp;своєму місці
+              {t("title")}
             </h2>
           </div>
 
           <div className="flex flex-col gap-6 lg:gap-8 lg:max-w-[664px] lg:pt-2 flex-grow">
             <p className="font-geologica text-sm sm:text-base md:text-lg leading-relaxed text-black/80">
-              Кожна тваринка має свій характер. Оберіть компаньйона, що ідеально
-              доповнить ваш стиль життя.
+              {t("description")}
             </p>
             <div className="flex flex-row justify-start items-center gap-3 sm:gap-4">
               {getFilterButtonStyle("dog", speciesCounts.dog)}
@@ -119,11 +120,9 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
             <div className="text-center py-12 min-h-[320px] bg-gray-50 rounded-lg">
               <PawPrint className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg font-semibold">
-                Породи не знайдено
+                {t("noBreeds")}
               </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Спробуйте змінити фільтри або зазирніть пізніше.
-              </p>
+              <p className="text-gray-400 text-sm mt-1">{t("noBreedsSub")}</p>
             </div>
           ) : (
             <div
@@ -133,7 +132,7 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
               tabIndex={0}
               onKeyDown={handleKeyDown}
               role="listbox"
-              aria-label="Список порід"
+              aria-label={t("breedsList")}
             >
               {displayedBreeds.map((breed) => {
                 const isHovered = hoveredBreedId === breed.id;
@@ -161,7 +160,7 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
                     role="option"
                     aria-selected={false}
                     aria-label={`${breed.name} (${
-                      breed.species === "dog" ? "Собака" : "Кіт"
+                      breed.species === "dog" ? t("dog") : t("cat")
                     })`}
                   >
                     <div className="relative w-full h-[160px] sm:h-[180px] mb-3 sm:mb-4 transition-transform duration-300 ease-in-out group-hover:scale-105">

@@ -1,5 +1,6 @@
 "use client";
 import { PetListing } from "@/lib/types/pets";
+import { useTranslations } from "next-intl";
 import PetCard from "@/components/pets/pet-card";
 import EmptyState from "@/components/pets/pet-list/empty-state";
 import InfoCard from "@/components/pets/info-card";
@@ -27,6 +28,8 @@ export default function PetList({
   itemsPerPage = 8,
   totalAdopted = 245,
 }: PetListProps) {
+  const t = useTranslations("PetListings");
+
   if (!petListings.length) {
     return <EmptyState />;
   }
@@ -36,7 +39,7 @@ export default function PetList({
     {
       id: "total-adopted",
       title: `${totalAdopted}`,
-      description: "сімей знайшли нового члена в сім'ю",
+      description: t("totalAdopted"),
       position: 4, // Position after first row (5 cards per row on desktop)
       variant: "white", // First info card is white
       layout: "count", // Use count layout for numeric display
@@ -44,8 +47,7 @@ export default function PetList({
     },
     {
       id: "specialists",
-      title:
-        "Наші спеціалісти з ранкових підйомів вже встигли завоювати серця і довіру в сотнях домівок",
+      title: t("specialistsTitle"),
       description: "",
       position: 14, // Position at a point where it won't disrupt the grid
       variant: "green",
@@ -112,7 +114,8 @@ export default function PetList({
   return (
     <div className="flex flex-col w-full">
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ${className}`}>
+        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ${className}`}
+      >
         {allItems.map((item, index) => {
           if ("isInfoCard" in item) {
             return (
@@ -145,10 +148,11 @@ export default function PetList({
           <button
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="px-6 py-3 bg-white border border-gray-300 rounded-lg text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer">
+            className="px-6 py-3 bg-white border border-gray-300 rounded-lg text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer"
+          >
             {isLoadingMore
-              ? "Завантаження..."
-              : `Завантажити ще ${itemsPerPage} тваринок`}
+              ? t("loading")
+              : t("loadMore", { count: itemsPerPage })}
           </button>
         </div>
       )}

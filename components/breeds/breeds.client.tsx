@@ -10,7 +10,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  Clock,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { getImageUrl } from "@/lib/utils/get-image-url";
@@ -48,7 +47,6 @@ export function BreedsClient({
     initialSpecies
   );
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const [filterTime, setFilterTime] = useState<number>(0);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -135,8 +133,6 @@ export function BreedsClient({
 
   // 🚀 INSTANT CLIENT-SIDE FILTERING (ALL data available)
   const filteredBreeds = useMemo(() => {
-    const startTime = performance.now();
-
     let filtered = allBreeds;
 
     // Filter by species
@@ -155,10 +151,6 @@ export function BreedsClient({
           (breed.origin && breed.origin.toLowerCase().includes(searchLower))
       );
     }
-
-    const endTime = performance.now();
-    const processingTime = Math.round(endTime - startTime);
-    setFilterTime(processingTime);
 
     return filtered;
   }, [allBreeds, activeSpecies, debouncedSearchTerm]);
@@ -228,21 +220,6 @@ export function BreedsClient({
 
   return (
     <>
-      {/* Performance info for development */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-          <div className="flex items-center gap-2 text-sm text-green-700">
-            <Clock className="h-4 w-4" />
-            <span>
-              <strong>Client Performance:</strong> Filtered{" "}
-              {filteredBreeds.length} breeds in {filterTime}ms
-              {debouncedSearchTerm && ` • Search: "${debouncedSearchTerm}"`}
-              {activeSpecies !== "all" && ` • Species: ${activeSpecies}`}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-8">
         <div className="flex flex-col md:flex-row gap-4">
