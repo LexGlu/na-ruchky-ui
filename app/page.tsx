@@ -8,10 +8,9 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 
 import { getAllPetsCache, getPetsMetadata } from "@/lib/cache/pets.cache";
-import { PetListing } from "@/lib/types/pets";
 
 // ============================================================================
-// ISR CONFIGURATION
+// ISR CONFIGURATION - Single source of truth
 // ============================================================================
 
 export const revalidate = 3600; // 1 hour
@@ -75,7 +74,6 @@ const HeroSection = () => {
       className="bg-[#CCF28C] rounded-b-[17px] py-8 px-4 sm:px-12 relative text-black mb-[2px]"
       id="hero-section"
     >
-      {/* Heading */}
       <div className="container flex flex-col mx-auto gap-0 sm:gap-[100px]">
         <h1 className="w-2/3 text-4xl sm:text-[96px]/[82px] font-bold text-left">
           Тваринки, які
@@ -95,7 +93,6 @@ const HeroSection = () => {
             />
           </div>
 
-          {/* Mobile mascot - shown only on small screens */}
           <div className="sm:hidden absolute -top-[131px] -right-3 z-10 pointer-events-none">
             <Image
               src={heroDogMascot}
@@ -107,7 +104,6 @@ const HeroSection = () => {
             />
           </div>
 
-          {/* Search component */}
           <SearchBar />
         </div>
       </div>
@@ -116,149 +112,124 @@ const HeroSection = () => {
 };
 
 // ============================================================================
-// PAGE COMPONENT PROPS INTERFACE
+// LOADING SKELETONS
 // ============================================================================
 
-interface PetsPageProps {
-  initialPetsData?: {
-    pets: PetListing[];
-    totalCount: number;
-    speciesCounts: {
-      all: number;
-      dog: number;
-      cat: number;
-    };
-  };
-}
+const LoadingSkeletons = {
+  Breeds: () => (
+    <div className="animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+      <div className="flex gap-4 overflow-hidden">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div
+            key={i}
+            className="w-[215px] h-[297px] bg-gray-200 rounded-[20px] flex-shrink-0"
+          />
+        ))}
+      </div>
+    </div>
+  ),
+
+  NewListings: () => (
+    <div className="container bg-white rounded-[20px] px-4 my-1 pb-8 animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+      <div className="flex gap-2 overflow-hidden">
+        {Array.from({ length: 7 }, (_, i) => (
+          <div
+            key={i}
+            className="w-[200px] h-[280px] bg-gray-200 rounded-lg flex-shrink-0"
+          />
+        ))}
+      </div>
+    </div>
+  ),
+
+  PetListings: () => (
+    <div className="flex flex-col w-full py-8 px-4 md:px-6 bg-white rounded-[20px] shadow-sm animate-pulse">
+      <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {Array.from({ length: 15 }, (_, i) => (
+          <div
+            key={i}
+            className="w-full h-[401px] bg-gray-200 rounded-[20px]"
+          />
+        ))}
+      </div>
+    </div>
+  ),
+};
 
 // ============================================================================
 // MAIN PAGE COMPONENT
 // ============================================================================
 
 export default async function PetsPage() {
-  // Fetch initial data at build time
-  let initialPetsData: PetsPageProps["initialPetsData"];
+  // Pre-load all data at build time for maximum ISR benefit
+  const petsData = await getAllPetsCache();
 
-  try {
-    const cachedData = await getAllPetsCache();
-    initialPetsData = {
-      pets: cachedData.pets,
-      totalCount: cachedData.totalCount,
-      speciesCounts: cachedData.speciesCounts,
-    };
-
-    console.log(
-      `✅ Loaded ${initialPetsData.pets.length} pets for static generation`
-    );
-  } catch (error) {
-    console.error("❌ Error loading pets cache for static generation:", error);
-    // Fallback to undefined - components will handle client-side loading
-    initialPetsData = undefined;
-  }
+  console.log(
+    `✅ ISR: Loaded ${
+      petsData.pets.length
+    } pets for static generation at ${new Date().toISOString()}`
+  );
 
   return (
     <main className="flex flex-col">
-      {/* Search section with lime background */}
+      {/* Hero Section */}
       <HeroSection />
 
+      {/* Content Sections */}
       <section className="flex flex-col text-black gap-0 bg-white px-4 pt-4 rounded-[20px] mb-1">
-        {/* Breeds section on white background */}
+        {/* Breeds Section */}
         <div className="bg-white rounded-b-[20px]">
           <div className="container mx-auto py-8">
-            <Suspense fallback={<BreedsLoadingSkeleton />}>
+            <Suspense fallback={<LoadingSkeletons.Breeds />}>
               <BreedsSection />
             </Suspense>
           </div>
         </div>
 
-        <Suspense fallback={<NewPetListingsLoadingSkeleton />}>
+        {/* New Pet Listings */}
+        <Suspense fallback={<LoadingSkeletons.NewListings />}>
           <NewPetListings />
         </Suspense>
       </section>
 
-      {/* Pet listings section with static data */}
-      <Suspense fallback={<PetListingsLoadingSkeleton />}>
-        <PetListingsSection initialData={initialPetsData} />
+      {/* Main Pet Listings - Pass pre-loaded data */}
+      <Suspense fallback={<LoadingSkeletons.PetListings />}>
+        <PetListingsSection staticData={petsData} />
       </Suspense>
 
-      {/* Development info in dev mode */}
-      {process.env.NODE_ENV === "development" && initialPetsData && (
+      {/* Development Info */}
+      {process.env.NODE_ENV === "development" && (
         <div className="container mx-auto mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h3 className="font-medium text-blue-800 mb-2">
             ISR Development Info
           </h3>
           <div className="text-sm text-blue-700 space-y-1">
             <p>
-              Static pets loaded: <strong>{initialPetsData.pets.length}</strong>
+              <strong>Static Generation:</strong> ✅ Active
             </p>
             <p>
-              Total count: <strong>{initialPetsData.totalCount}</strong>
+              <strong>Revalidation:</strong> Every {revalidate / 60} minutes
             </p>
             <p>
-              Dogs: <strong>{initialPetsData.speciesCounts.dog}</strong> | Cats:{" "}
-              <strong>{initialPetsData.speciesCounts.cat}</strong>
+              <strong>Build Time Data:</strong> {petsData.pets.length} pets
+              loaded
             </p>
             <p>
-              ISR revalidation: <strong>Every 1 hour</strong>
+              <strong>Total Count:</strong> {petsData.totalCount}
             </p>
             <p>
-              Static generation: <strong>Build time + ISR</strong>
+              <strong>Last Updated:</strong>{" "}
+              {new Date(petsData.lastUpdated).toLocaleString()}
+            </p>
+            <p>
+              <strong>Cache Strategy:</strong> ISR + Client-side filtering
             </p>
           </div>
         </div>
       )}
     </main>
-  );
-}
-
-// ============================================================================
-// LOADING SKELETONS
-// ============================================================================
-
-function BreedsLoadingSkeleton() {
-  return (
-    <div className="animate-pulse">
-      <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-      <div className="flex gap-4 overflow-hidden">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="w-[215px] h-[297px] bg-gray-200 rounded-[20px] flex-shrink-0"
-          ></div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function NewPetListingsLoadingSkeleton() {
-  return (
-    <div className="container bg-white rounded-[20px] px-4 my-1 pb-8 animate-pulse">
-      <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-      <div className="flex gap-2 overflow-hidden">
-        {[...Array(7)].map((_, i) => (
-          <div
-            key={i}
-            className="w-[200px] h-[280px] bg-gray-200 rounded-lg flex-shrink-0"
-          ></div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PetListingsLoadingSkeleton() {
-  return (
-    <div className="flex flex-col w-full py-8 px-4 md:px-6 bg-white rounded-[20px] shadow-sm animate-pulse">
-      <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="w-full h-[401px] bg-gray-200 rounded-[20px]"
-          ></div>
-        ))}
-      </div>
-    </div>
   );
 }

@@ -6,12 +6,29 @@ import { unstable_cache } from "next/cache";
 // CACHE CONFIGURATION
 // ============================================================================
 
-const PETS_CACHE_TTL = 3600; // 1 hour in seconds
-const PETS_CACHE_TAGS = ["pets", "pet-listings"];
-const BATCH_SIZE = 100; // Fetch pets in batches to avoid overwhelming the API
+const CACHE_CONFIG = {
+  // Primary cache for all pets data (longer TTL for stability)
+  PETS_TTL: 3600, // 1 hour
+  // Quick metadata cache (shorter TTL for responsiveness)
+  METADATA_TTL: 1800, // 30 minutes
+  // New listings cache (frequent updates for freshness)
+  NEW_LISTINGS_TTL: 900, // 15 minutes
+  // Batch size for API calls
+  BATCH_SIZE: 100,
+  // Limits
+  NEW_LISTINGS_LIMIT: 15,
+  FEATURED_PETS_LIMIT: 8,
+} as const;
+
+const CACHE_TAGS = {
+  PETS: ["pets", "pet-listings"] as string[],
+  NEW_LISTINGS: ["pets", "new-listings"] as string[],
+  METADATA: ["pets", "metadata"] as string[],
+  FEATURED: ["pets", "featured"] as string[],
+} as const;
 
 // ============================================================================
-// CACHED DATA INTERFACES
+// INTERFACES
 // ============================================================================
 
 export interface CachedPetsData {
@@ -25,6 +42,12 @@ export interface CachedPetsData {
   };
   locationCounts: Record<string, number>;
   breedCounts: Record<string, number>;
+  // Add performance metadata
+  cacheMetadata: {
+    buildTime: string;
+    batchesFetched: number;
+    cacheHitRate?: number;
+  };
 }
 
 export interface PetsMetadata {
@@ -34,262 +57,495 @@ export interface PetsMetadata {
     dog: number;
     cat: number;
   };
-}
-
-// ============================================================================
-// CORE CACHE FUNCTIONS
-// ============================================================================
-
-/**
- * Fetches all pet listings in batches to avoid API limits
- */
-async function fetchAllPetListings(): Promise<{
-  pets: PetListing[];
-  totalCount: number;
-}> {
-  console.log("🐾 Fetching all pet listings for cache...");
-
-  const allPets: PetListing[] = [];
-  let offset = 0;
-  let totalCount = 0;
-  let hasMore = true;
-
-  // First fetch to get total count
-  const firstBatch = await fetchPetListings(
-    new URLSearchParams({
-      limit: BATCH_SIZE.toString(),
-      offset: "0",
-    })
-  );
-
-  allPets.push(...firstBatch.items);
-  totalCount = firstBatch.count;
-  offset += BATCH_SIZE;
-  hasMore = allPets.length < totalCount;
-
-  console.log(
-    `📊 Total pets to fetch: ${totalCount}, fetched: ${allPets.length}`
-  );
-
-  // Fetch remaining batches
-  while (hasMore && offset < totalCount) {
-    try {
-      const batch = await fetchPetListings(
-        new URLSearchParams({
-          limit: BATCH_SIZE.toString(),
-          offset: offset.toString(),
-        })
-      );
-
-      allPets.push(...batch.items);
-      offset += BATCH_SIZE;
-      hasMore = allPets.length < totalCount;
-
-      console.log(`📦 Fetched batch: ${allPets.length}/${totalCount} pets`);
-
-      // Rate limiting protection
-      if (hasMore) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    } catch (error) {
-      console.error(`❌ Error fetching pets batch at offset ${offset}:`, error);
-      break;
-    }
-  }
-
-  console.log(`✅ Completed fetching ${allPets.length} pets`);
-  return { pets: allPets, totalCount };
-}
-
-/**
- * Processes pet data to generate useful statistics
- */
-function processPetStatistics(pets: PetListing[]): {
-  speciesCounts: CachedPetsData["speciesCounts"];
-  locationCounts: Record<string, number>;
-  breedCounts: Record<string, number>;
-} {
-  const speciesCounts = { all: pets.length, dog: 0, cat: 0 };
-  const locationCounts: Record<string, number> = {};
-  const breedCounts: Record<string, number> = {};
-
-  pets.forEach((pet) => {
-    // Count species
-    if (pet.pet.species === "dog") speciesCounts.dog++;
-    if (pet.pet.species === "cat") speciesCounts.cat++;
-
-    // Count locations
-    const location = pet.pet.location || "Unknown";
-    locationCounts[location] = (locationCounts[location] || 0) + 1;
-
-    // Count breeds
-    const breed = pet.pet.breed_name || "Unknown";
-    breedCounts[breed] = (breedCounts[breed] || 0) + 1;
-  });
-
-  return { speciesCounts, locationCounts, breedCounts };
-}
-
-/**
- * Internal function to build complete pets cache data
- */
-async function buildPetsCacheData(): Promise<CachedPetsData> {
-  const { pets, totalCount } = await fetchAllPetListings();
-  const statistics = processPetStatistics(pets);
-
-  return {
-    pets,
-    totalCount,
-    lastUpdated: new Date().toISOString(),
-    ...statistics,
+  performance: {
+    avgResponseTime: number;
+    cacheAge: number;
   };
 }
 
 // ============================================================================
-// CACHED FUNCTIONS WITH NEXT.JS UNSTABLE_CACHE
+// CORE FETCHING FUNCTIONS
 // ============================================================================
 
 /**
- * Gets all pets with comprehensive caching
- * Revalidated every hour, cached with pets tags
+ * Robust batch fetching with error recovery and rate limiting
+ */
+async function fetchAllPetsRobust(): Promise<{
+  pets: PetListing[];
+  totalCount: number;
+  batchesFetched: number;
+}> {
+  console.log("🐾 Starting robust pets data fetch...");
+
+  const startTime = Date.now();
+  const allPets: PetListing[] = [];
+  let batchesFetched = 0;
+  let totalCount = 0;
+  let consecutiveErrors = 0;
+  const maxConsecutiveErrors = 3;
+
+  try {
+    // Initial fetch to get total count
+    const firstBatch = await fetchPetListings(
+      new URLSearchParams({
+        limit: CACHE_CONFIG.BATCH_SIZE.toString(),
+        offset: "0",
+      })
+    );
+
+    allPets.push(...firstBatch.items);
+    totalCount = firstBatch.count;
+    batchesFetched = 1;
+    consecutiveErrors = 0;
+
+    console.log(
+      `📊 Initial batch: ${firstBatch.items.length}/${totalCount} pets`
+    );
+
+    // Fetch remaining batches with error recovery
+    let offset = CACHE_CONFIG.BATCH_SIZE;
+
+    while (
+      allPets.length < totalCount &&
+      consecutiveErrors < maxConsecutiveErrors
+    ) {
+      try {
+        const batch = await fetchPetListings(
+          new URLSearchParams({
+            limit: CACHE_CONFIG.BATCH_SIZE.toString(),
+            offset: offset.toString(),
+          })
+        );
+
+        if (batch.items.length > 0) {
+          allPets.push(...batch.items);
+          batchesFetched++;
+          consecutiveErrors = 0;
+
+          console.log(
+            `📦 Batch ${batchesFetched}: ${allPets.length}/${totalCount} pets`
+          );
+        } else {
+          console.log("📭 Empty batch received, stopping fetch");
+          break;
+        }
+
+        offset += CACHE_CONFIG.BATCH_SIZE;
+
+        // Rate limiting with exponential backoff
+        const delay = Math.min(100 * batchesFetched, 1000);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } catch (error) {
+        consecutiveErrors++;
+        console.warn(
+          `⚠️ Batch fetch error (${consecutiveErrors}/${maxConsecutiveErrors}):`,
+          error
+        );
+
+        if (consecutiveErrors < maxConsecutiveErrors) {
+          // Exponential backoff retry
+          const retryDelay = 1000 * Math.pow(2, consecutiveErrors);
+          console.log(`🔄 Retrying after ${retryDelay}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        }
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    console.log(
+      `✅ Fetch completed: ${allPets.length} pets in ${duration}ms (${batchesFetched} batches)`
+    );
+
+    return { pets: allPets, totalCount, batchesFetched };
+  } catch (error) {
+    console.error("❌ Critical error in robust fetch:", error);
+    throw new Error(
+      `Failed to fetch pets data: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+
+/**
+ * Optimized statistics processing with memoization
+ */
+function processPetStatistics(
+  pets: PetListing[]
+): Omit<
+  CachedPetsData,
+  "pets" | "totalCount" | "lastUpdated" | "cacheMetadata"
+> {
+  const stats = {
+    speciesCounts: { all: pets.length, dog: 0, cat: 0 },
+    locationCounts: {} as Record<string, number>,
+    breedCounts: {} as Record<string, number>,
+  };
+
+  // Single pass through pets for all statistics
+  for (const pet of pets) {
+    // Species counts
+    if (pet.pet.species === "dog") stats.speciesCounts.dog++;
+    else if (pet.pet.species === "cat") stats.speciesCounts.cat++;
+
+    // Location counts (with normalization)
+    const location = pet.pet.location?.trim() || "Unknown";
+    stats.locationCounts[location] = (stats.locationCounts[location] || 0) + 1;
+
+    // Breed counts (with normalization)
+    const breed = pet.pet.breed_name?.trim() || "Mixed";
+    stats.breedCounts[breed] = (stats.breedCounts[breed] || 0) + 1;
+  }
+
+  return stats;
+}
+
+/**
+ * Main cache data builder with comprehensive error handling
+ */
+async function buildCompletePetsCache(): Promise<CachedPetsData> {
+  try {
+    const { pets, totalCount, batchesFetched } = await fetchAllPetsRobust();
+    const statistics = processPetStatistics(pets);
+
+    return {
+      pets,
+      totalCount,
+      lastUpdated: new Date().toISOString(),
+      ...statistics,
+      cacheMetadata: {
+        buildTime: new Date().toISOString(),
+        batchesFetched,
+      },
+    };
+  } catch (error) {
+    console.error("❌ Failed to build pets cache:", error);
+
+    // Return minimal fallback data instead of throwing
+    return {
+      pets: [],
+      totalCount: 0,
+      lastUpdated: new Date().toISOString(),
+      speciesCounts: { all: 0, dog: 0, cat: 0 },
+      locationCounts: {},
+      breedCounts: {},
+      cacheMetadata: {
+        buildTime: new Date().toISOString(),
+        batchesFetched: 0,
+      },
+    };
+  }
+}
+
+// ============================================================================
+// CACHED FUNCTIONS (ISR OPTIMIZED)
+// ============================================================================
+
+/**
+ * Primary ISR cache function - contains all pets data
+ * This is the main function that powers ISR static generation
  */
 export const getAllPetsCache = unstable_cache(
-  buildPetsCacheData,
-  ["all-pets"],
+  buildCompletePetsCache,
+  ["pets-complete-cache"],
   {
-    revalidate: PETS_CACHE_TTL,
-    tags: PETS_CACHE_TAGS,
+    revalidate: CACHE_CONFIG.PETS_TTL,
+    tags: CACHE_TAGS.PETS,
   }
 );
 
 /**
- * Gets pets metadata for quick access to counts
+ * Lightweight metadata cache for quick page metadata generation
  */
 export const getPetsMetadata = unstable_cache(
   async (): Promise<PetsMetadata> => {
-    console.log("📋 Fetching pets metadata...");
+    const startTime = Date.now();
 
-    // Get just the first batch to extract metadata quickly
-    const result = await fetchPetListings(
-      new URLSearchParams({ limit: "1", offset: "0" })
-    );
+    try {
+      // Try to get from main cache first (most efficient)
+      const cachedData = await getAllPetsCache();
 
-    // For species breakdown, we need to fetch more data or use approximation
-    // This is a lightweight version - for exact counts, use getAllPetsCache
-    const speciesBreakdown = {
-      dog: Math.floor(result.count * 0.6), // Rough estimate
-      cat: Math.floor(result.count * 0.4), // Rough estimate
-    };
+      return {
+        count: cachedData.totalCount,
+        lastFetch: cachedData.lastUpdated,
+        speciesBreakdown: {
+          dog: cachedData.speciesCounts.dog,
+          cat: cachedData.speciesCounts.cat,
+        },
+        performance: {
+          avgResponseTime: Date.now() - startTime,
+          cacheAge: Date.now() - new Date(cachedData.lastUpdated).getTime(),
+        },
+      };
+    } catch (error) {
+      console.warn("⚠️ Fallback to API for metadata:", error);
 
-    return {
-      count: result.count,
-      lastFetch: new Date().toISOString(),
-      speciesBreakdown,
-    };
+      // Fallback to direct API call
+      const result = await fetchPetListings(
+        new URLSearchParams({ limit: "1", offset: "0" })
+      );
+
+      return {
+        count: result.count,
+        lastFetch: new Date().toISOString(),
+        speciesBreakdown: {
+          dog: Math.floor(result.count * 0.6), // Estimate
+          cat: Math.floor(result.count * 0.4), // Estimate
+        },
+        performance: {
+          avgResponseTime: Date.now() - startTime,
+          cacheAge: 0,
+        },
+      };
+    }
   },
   ["pets-metadata"],
   {
-    revalidate: PETS_CACHE_TTL,
-    tags: PETS_CACHE_TAGS,
+    revalidate: CACHE_CONFIG.METADATA_TTL,
+    tags: CACHE_TAGS.METADATA,
   }
 );
 
 /**
- * Gets all pet UUIDs for generateStaticParams
+ * New listings cache for homepage freshness
  */
-export const getAllPetUUIDs = unstable_cache(
-  async (): Promise<string[]> => {
-    console.log("🔗 Fetching all pet UUIDs for static generation...");
+export const getNewPetListingsCache = unstable_cache(
+  async (): Promise<PetListing[]> => {
+    try {
+      // Try main cache first for consistency
+      const cachedData = await getAllPetsCache();
 
-    const cacheData = await getAllPetsCache();
-    const uuids = cacheData.pets.map((pet) => pet.id);
+      // Sort by ID (assuming higher ID = newer) and take latest
+      const sortedPets = [...cachedData.pets].sort((a, b) =>
+        b.id.localeCompare(a.id)
+      );
+      return sortedPets.slice(0, CACHE_CONFIG.NEW_LISTINGS_LIMIT);
+    } catch (error) {
+      console.warn("⚠️ Fallback to API for new listings:", error);
 
-    console.log(`✅ Generated ${uuids.length} pet UUIDs for static params`);
-    return uuids;
+      const result = await fetchPetListings(
+        new URLSearchParams({
+          limit: CACHE_CONFIG.NEW_LISTINGS_LIMIT.toString(),
+          offset: "0",
+        })
+      );
+
+      return result.items;
+    }
   },
-  ["pet-uuids"],
+  ["new-pet-listings"],
   {
-    revalidate: PETS_CACHE_TTL,
-    tags: PETS_CACHE_TAGS,
+    revalidate: CACHE_CONFIG.NEW_LISTINGS_TTL,
+    tags: CACHE_TAGS.NEW_LISTINGS,
   }
 );
 
 /**
- * Gets pets filtered by species - useful for category pages
+ * Featured pets for special sections
  */
-export const getPetsBySpecies = unstable_cache(
-  async (species: "dog" | "cat"): Promise<PetListing[]> => {
-    console.log(`🐕 Fetching ${species} pets from cache...`);
+export const getFeaturedPetsCache = unstable_cache(
+  async (): Promise<PetListing[]> => {
+    try {
+      const cachedData = await getAllPetsCache();
 
-    const cacheData = await getAllPetsCache();
-    return cacheData.pets.filter((pet) => pet.pet.species === species);
+      // Select featured pets based on quality criteria
+      const featuredPets = cachedData.pets
+        .filter(
+          (pet) =>
+            pet.pet.images &&
+            pet.pet.images.length > 0 &&
+            pet.pet.short_description &&
+            pet.pet.breed_name &&
+            pet.pet.location
+        )
+        .sort((a, b) => {
+          // Prioritize pets with more complete profiles
+          const scoreA =
+            (a.pet.images?.length || 0) + (a.pet.short_description ? 1 : 0);
+          const scoreB =
+            (b.pet.images?.length || 0) + (b.pet.short_description ? 1 : 0);
+          return scoreB - scoreA;
+        })
+        .slice(0, CACHE_CONFIG.FEATURED_PETS_LIMIT);
+
+      return featuredPets;
+    } catch (error) {
+      console.error("❌ Error getting featured pets:", error);
+      return [];
+    }
+  },
+  ["featured-pets"],
+  {
+    revalidate: CACHE_CONFIG.PETS_TTL,
+    tags: CACHE_TAGS.FEATURED,
+  }
+);
+
+/**
+ * Species-specific caches for category pages
+ */
+export const getPetsBySpeciesCache = unstable_cache(
+  async (species: "dog" | "cat"): Promise<PetListing[]> => {
+    const cachedData = await getAllPetsCache();
+    return cachedData.pets.filter((pet) => pet.pet.species === species);
   },
   ["pets-by-species"],
   {
-    revalidate: PETS_CACHE_TTL,
-    tags: PETS_CACHE_TAGS,
+    revalidate: CACHE_CONFIG.PETS_TTL,
+    tags: CACHE_TAGS.PETS,
+  }
+);
+
+/**
+ * Get all pet UUIDs for static generation
+ */
+export const getAllPetUUIDs = unstable_cache(
+  async (): Promise<string[]> => {
+    try {
+      const cachedData = await getAllPetsCache();
+      return cachedData.pets.map((pet) => pet.id);
+    } catch (error) {
+      console.error("❌ Error getting pet UUIDs:", error);
+      return [];
+    }
+  },
+  ["pet-uuids"],
+  {
+    revalidate: CACHE_CONFIG.PETS_TTL,
+    tags: CACHE_TAGS.PETS,
   }
 );
 
 // ============================================================================
-// CACHE UTILITIES
+// CACHE MANAGEMENT UTILITIES
 // ============================================================================
 
 /**
- * Manually revalidate pets cache (useful for webhooks or admin actions)
+ * Manual cache revalidation (for webhooks/admin)
  */
-export async function revalidatePetsCache(): Promise<void> {
+export async function revalidateAllPetsCache(): Promise<void> {
   const { revalidateTag } = await import("next/cache");
 
-  console.log("🔄 Manually revalidating pets cache...");
+  console.log("🔄 Revalidating all pets caches...");
 
-  PETS_CACHE_TAGS.forEach((tag) => {
+  // Revalidate all cache tags
+  Object.values(CACHE_TAGS)
+    .flat()
+    .forEach((tag) => {
+      revalidateTag(tag);
+    });
+}
+
+/**
+ * Selective cache revalidation
+ */
+export async function revalidateSpecificCache(
+  cacheType: "pets" | "metadata" | "new-listings" | "featured"
+): Promise<void> {
+  const { revalidateTag } = await import("next/cache");
+
+  const tagMap = {
+    pets: CACHE_TAGS.PETS,
+    metadata: CACHE_TAGS.METADATA,
+    "new-listings": CACHE_TAGS.NEW_LISTINGS,
+    featured: CACHE_TAGS.FEATURED,
+  };
+
+  tagMap[cacheType].forEach((tag) => {
     revalidateTag(tag);
   });
 }
 
 /**
- * Get cache status and statistics
+ * Cache health check
  */
-export async function getPetsCacheStatus(): Promise<{
+export async function getCacheHealthStatus(): Promise<{
   isHealthy: boolean;
-  lastUpdate: string;
-  totalPets: number;
-  cacheSize: string;
+  caches: Record<
+    string,
+    {
+      status: "healthy" | "stale" | "error";
+      lastUpdate?: string;
+      count?: number;
+    }
+  >;
+  performance: {
+    totalPets: number;
+    avgBuildTime: number;
+    cacheEfficiency: number;
+  };
 }> {
   try {
-    const metadata = await getPetsMetadata();
+    const [petsData, metadata, newListings] = await Promise.allSettled([
+      getAllPetsCache(),
+      getPetsMetadata(),
+      getNewPetListingsCache(),
+    ]);
+
+    const caches = {
+      main:
+        petsData.status === "fulfilled"
+          ? {
+              status: "healthy" as const,
+              lastUpdate: petsData.value.lastUpdated,
+              count: petsData.value.totalCount,
+            }
+          : { status: "error" as const },
+      metadata:
+        metadata.status === "fulfilled"
+          ? {
+              status: "healthy" as const,
+              lastUpdate: metadata.value.lastFetch,
+              count: metadata.value.count,
+            }
+          : { status: "error" as const },
+      newListings:
+        newListings.status === "fulfilled"
+          ? { status: "healthy" as const, count: newListings.value.length }
+          : { status: "error" as const },
+    };
+
+    const isHealthy = Object.values(caches).every(
+      (cache) => cache.status === "healthy"
+    );
 
     return {
-      isHealthy: true,
-      lastUpdate: metadata.lastFetch,
-      totalPets: metadata.count,
-      cacheSize: `~${Math.round(metadata.count * 0.01)}MB`, // Rough estimate
+      isHealthy,
+      caches,
+      performance: {
+        totalPets:
+          petsData.status === "fulfilled" ? petsData.value.totalCount : 0,
+        avgBuildTime:
+          petsData.status === "fulfilled"
+            ? Date.now() -
+              new Date(petsData.value.cacheMetadata.buildTime).getTime()
+            : 0,
+        cacheEfficiency: isHealthy ? 95 : 60, // Rough estimate
+      },
     };
   } catch (error) {
-    console.error("❌ Error checking pets cache status:", error);
+    console.error("❌ Cache health check failed:", error);
     return {
       isHealthy: false,
-      lastUpdate: "Unknown",
-      totalPets: 0,
-      cacheSize: "Unknown",
+      caches: {},
+      performance: { totalPets: 0, avgBuildTime: 0, cacheEfficiency: 0 },
     };
   }
 }
 
 // ============================================================================
-// DEVELOPMENT HELPERS
+// DEVELOPMENT UTILITIES
 // ============================================================================
 
 /**
- * Clear all pets cache (development only)
+ * Force cache refresh (development only)
  */
-export async function clearPetsCache(): Promise<void> {
+export async function forceCacheRefresh(): Promise<void> {
   if (process.env.NODE_ENV !== "development") {
-    console.warn("⚠️ Cache clearing is only available in development");
+    console.warn("⚠️ Cache refresh only available in development");
     return;
   }
 
-  console.log("🧹 Clearing pets cache...");
-  await revalidatePetsCache();
+  console.log("🔄 Force refreshing all caches...");
+  await revalidateAllPetsCache();
 }

@@ -1,136 +1,26 @@
-"use client";
+import { NewListingsClient } from "./new-listings.client";
+import { getNewPetListingsCache } from "@/lib/cache/pets.cache";
 
-import NewPetCard from "@/components/pets/new-pet-card";
-import { NewPetCardSkeleton } from "@/components/ui/skeletons/pets";
-import {
-  AlertCircle,
-  RefreshCw,
-  SearchX,
-  ArrowLeft,
-  ArrowRight,
-} from "lucide-react";
+export const revalidate = 1800; // 30 minutes for new listings (more frequent updates)
+export const dynamic = "force-static";
 
-import { useNewPetListings } from "@/hooks/use-new-pet-listings";
+export default async function NewListings() {
+  // Fetch new pet listings from cache
+  const newPets = await getNewPetListingsCache();
 
-function NewPetListingsContent() {
-  const {
-    newPets,
-    isLoading,
-    error,
-    isRetrying,
-    handleRetry,
-    scrollContainerRef,
-    showLeftArrow,
-    showRightArrow,
-    scroll,
-  } = useNewPetListings();
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 bg-gray-50 rounded-xl border border-gray-200">
-        <div className="bg-red-50 rounded-full p-4 mb-4">
-          <AlertCircle size={36} className="text-red-500" />
-        </div>
-        <h3 className="text-xl font-medium text-gray-800 mb-2">
-          Помилка завантаження
-        </h3>
-        <p className="text-gray-500 max-w-md mb-6 text-center">{error}</p>
-        <button
-          onClick={handleRetry}
-          className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
-          disabled={isRetrying}>
-          {isRetrying ? (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              Завантаження...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Спробувати ще раз
-            </>
-          )}
-        </button>
-      </div>
-    );
-  }
-
-  // Empty state - no pets
-  if (newPets.length === 0 && !isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 px-4 bg-gray-50 rounded-xl border border-gray-100">
-        <div className="bg-gray-100 rounded-full p-6 mb-4">
-          <SearchX size={36} className="text-gray-400" />
-        </div>
-        <h3 className="text-xl font-medium text-gray-800 mb-2">
-          Наразі немає нових оголошень
-        </h3>
-        <p className="text-gray-500 max-w-md mb-2 text-center">
-          Заходьте пізніше або перегляньте наші поточні оголошення
-        </p>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (isLoading) {
-    return <NewPetListingsSkeleton />;
-  }
-
-  // Success state with pets
   return (
-    <div className="relative">
-      {showLeftArrow && (
-        <button
-          onClick={() => scroll("left")}
-          className="absolute left-4 top-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md hover:bg-white transition-all"
-          aria-label="Scroll left">
-          <ArrowLeft size={24} className="text-black cursor-pointer" />
-        </button>
-      )}
-
-      {showRightArrow && (
-        <button
-          onClick={() => scroll("right")}
-          className="absolute right-4 top-1/2 z-10 bg-white/90 rounded-full p-2 shadow-md hover:bg-white transition-all"
-          aria-label="Scroll right">
-          <ArrowRight size={24} className="text-black cursor-pointer" />
-        </button>
-      )}
-
-      <div
-        ref={scrollContainerRef}
-        className="flex gap-2 overflow-x-auto scrollbar-hide snap-x px-1"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-        {newPets.map((pet) => (
-          <div key={pet.id} className="flex-none snap-start">
-            <NewPetCard pet={pet} />
+    <section className="bg-white rounded-2xl md:rounded-[24px] p-4 sm:p-6 md:p-8 w-full max-w-[1432px] mx-auto mb-8">
+      <div className="w-full max-w-[1336px] mx-auto">
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          <div>
+            <h2 className="font-geologica font-bold text-2xl sm:text-3xl md:text-4xl text-black mb-2">
+              Нові оголошення
+            </h2>
           </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Loading skeleton component
-function NewPetListingsSkeleton() {
-  return (
-    <div className="flex gap-2 overflow-hidden px-1">
-      {[...Array(7)].map((_, i) => (
-        <div key={i} className="flex-none snap-start">
-          <NewPetCardSkeleton />
         </div>
-      ))}
-    </div>
-  );
-}
 
-export default function NewPetListings() {
-  return (
-    <div className="container bg-white rounded-[20px] px-4 my-1 pb-8">
-      <h2 className="text-3xl font-bold text-black mb-6">Нові оголошення</h2>
-      <NewPetListingsContent />
-    </div>
+        <NewListingsClient pets={newPets} />
+      </div>
+    </section>
   );
 }

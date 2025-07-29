@@ -20,12 +20,12 @@ export const dynamic = "force-static";
 // STATIC PARAMS GENERATION
 // ============================================================================
 
-export async function generateStaticParams() {
+export async function generateStaticParams(): Promise<{ uuid: string }[]> {
   try {
     console.log("🔧 Generating static params for pet detail pages...");
 
     const petUUIDs = await getAllPetUUIDs();
-    const params = petUUIDs.map((uuid) => ({ uuid }));
+    const params = petUUIDs.map((uuid: string) => ({ uuid }));
 
     console.log(`✅ Generated ${params.length} static params for pet pages`);
     return params;
