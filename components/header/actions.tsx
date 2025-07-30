@@ -5,24 +5,32 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import paw from "@/public/paw-dark.svg";
 
-import { useAuth } from "@/store/auth-store";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setLogoutModalOpen, setAuthModalOpen } from "@/store/auth/auth.slice";
+import {
+  selectUser,
+  selectIsAuthenticated,
+  selectUserDisplayName,
+} from "@/store/auth/auth.selectors";
 
 export default function HeaderActions() {
   const t = useTranslations("Header.actions");
-  const { user, setLogOutModalOpen, setAuthModalOpen } = useAuth();
+  const dispatch = useAppDispatch();
+
+  const user = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const userDisplayName = useAppSelector(selectUserDisplayName);
 
   const handleLogOutBtnClick = () => {
-    // Open the logout modal
-    setLogOutModalOpen(true);
+    dispatch(setLogoutModalOpen(true));
   };
 
   const handleAuthBtnClick = () => {
-    // Open the auth modal
-    setAuthModalOpen(true);
+    dispatch(setAuthModalOpen(true));
   };
 
-  if (!user) {
-    // Not logged in => show single “Увійти” button + paw button
+  if (!isAuthenticated || !user) {
+    // Not logged in => show single "Увійти" button + paw button
     return (
       <div className="flex items-center">
         <button
@@ -45,9 +53,7 @@ export default function HeaderActions() {
   // If user is logged in => greeting + logout
   return (
     <div className="flex items-center gap-3">
-      <p className="font-semibold text-black">
-        {user.first_name || user.email}
-      </p>
+      <p className="font-semibold text-black">{userDisplayName}</p>
       <div className="flex">
         <button
           onClick={handleLogOutBtnClick}

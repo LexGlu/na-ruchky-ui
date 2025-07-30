@@ -1,207 +1,108 @@
-"use client";
-
+import { useEffect, useState } from "react";
+import { useAppSelector, useAppDispatch } from "@/store";
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import { authService } from "@/lib/api/auth";
-import { User } from "@/lib/types/user";
-import { BaseApiError, UnauthorizedError } from "@/lib/api/errors";
+  selectUser,
+  selectIsAuthenticated,
+  selectAuthLoading,
+  selectAuthError,
+  selectIsInitialized,
+  selectAuthModalOpen,
+  selectLogoutModalOpen,
+  selectUserDisplayName,
+  selectUserInitials,
+  selectIsAuthReady,
+  selectShouldShowAuthModal,
+  selectCanLogout,
+} from "@/store/auth/auth.selectors";
+import { initializeAuth } from "@/store/auth/auth.slice";
 
-interface UserContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  updateUser: (userData: Partial<User>) => void;
-  refreshUser: () => Promise<void>;
-  error: string | null;
-  clearError: () => void;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-}
-
-const UserContext = createContext<UserContextType | null>(null);
-
-interface UserProviderProps {
-  children: ReactNode;
-}
-
-export function UserProvider({ children }: UserProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const clearError = () => setError(null);
-
-  // Initialize user on mount
-  useEffect(() => {
-    async function initializeUser() {
-      try {
-        const currentUser = await authService.fetchCurrentUser();
-        setUser(currentUser);
-      } catch (err) {
-        // Not authenticated is expected, don't set error
-        if (!(err instanceof UnauthorizedError)) {
-          console.error("Failed to fetch current user:", err);
-        }
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    initializeUser();
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await authService.loginUser(email, password);
-      setUser(response.user);
-    } catch (err) {
-      const errorMessage =
-        err instanceof BaseApiError
-          ? err.message
-          : "Login failed. Please try again.";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      await authService.logoutUser();
-      setUser(null);
-    } catch (err) {
-      const errorMessage =
-        err instanceof BaseApiError
-          ? err.message
-          : "Logout failed. Please try again.";
-      setError(errorMessage);
-      // Still clear user data locally even if logout request fails
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const register = async (data: RegisterData) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await authService.registerUser(data);
-      setUser(response.user);
-    } catch (err) {
-      const errorMessage =
-        err instanceof BaseApiError
-          ? err.message
-          : "Registration failed. Please try again.";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      setUser((prev) => (prev ? { ...prev, ...userData } : null));
-    }
-  };
-
-  const refreshUser = async () => {
-    try {
-      setError(null);
-      const currentUser = await authService.fetchCurrentUser();
-      setUser(currentUser);
-    } catch (err) {
-      if (err instanceof UnauthorizedError) {
-        setUser(null);
-      } else {
-        const errorMessage =
-          err instanceof BaseApiError
-            ? err.message
-            : "Failed to refresh user data.";
-        setError(errorMessage);
-      }
-    }
-  };
-
-  const value: UserContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    login,
-    logout,
-    register,
-    updateUser,
-    refreshUser,
-    error,
-    clearError,
-  };
-
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
-}
-
-// Custom hook to use the user context
-export function useUser(): UserContextType {
-  const context = useContext(UserContext);
-
-  if (!context) {
-    throw new Error("useUser must be used within a UserProvider");
-  }
-
-  return context;
-}
-
-// Optional: Hook for components that need to know auth status without full user data
+/**
+ * Main auth hook for components that need auth state.
+ * Does not block rendering - auth state may be loading initially.
+ */
 export function useAuth() {
-  const { isAuthenticated, isLoading, user } = useUser();
+  const user = useAppSelector(selectUser);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const loading = useAppSelector(selectAuthLoading);
+  const error = useAppSelector(selectAuthError);
+  const isInitialized = useAppSelector(selectIsInitialized);
+  const authModalOpen = useAppSelector(selectAuthModalOpen);
+  const logoutModalOpen = useAppSelector(selectLogoutModalOpen);
+  const userDisplayName = useAppSelector(selectUserDisplayName);
+  const userInitials = useAppSelector(selectUserInitials);
+  const isAuthReady = useAppSelector(selectIsAuthReady);
+  const shouldShowAuthModal = useAppSelector(selectShouldShowAuthModal);
+  const canLogout = useAppSelector(selectCanLogout);
 
   return {
+    user,
     isAuthenticated,
-    isLoading,
+    loading,
+    error,
+    isInitialized,
+    authModalOpen,
+    logoutModalOpen,
+    userDisplayName,
+    userInitials,
+    isAuthReady,
+    shouldShowAuthModal,
+    canLogout,
+    // Quick access properties
     userId: user?.id,
     userEmail: user?.email,
   };
 }
 
-// Hook for protected routes/components
-export function useRequireAuth() {
-  const { isAuthenticated, isLoading, user } = useUser();
+/**
+ * Hook for components that need to wait for auth initialization.
+ * Use this when you specifically need to know the auth status before rendering.
+ * Most components should use useAuth() instead.
+ */
+export function useAuthInitialized() {
+  const dispatch = useAppDispatch();
+  const auth = useAuth();
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      // Redirect to login or show auth modal
-      // This could dispatch an action to show login modal
-      console.warn("Authentication required");
-    }
-  }, [isAuthenticated, isLoading]);
+    const ensureAuthInitialized = async () => {
+      if (!auth.isInitialized && !hasInitialized) {
+        setHasInitialized(true);
+        try {
+          await dispatch(initializeAuth()).unwrap();
+        } catch (error) {
+          console.warn("Auth initialization failed:", error);
+        }
+      }
+    };
+
+    ensureAuthInitialized();
+  }, [dispatch, auth.isInitialized, hasInitialized]);
 
   return {
-    isAuthenticated,
-    isLoading,
-    user,
-    isReady: !isLoading && isAuthenticated,
+    ...auth,
+    isReady: auth.isInitialized,
+  };
+}
+
+/**
+ * Hook for protected routes/components that require authentication.
+ * This will trigger auth initialization if needed and provide loading state.
+ */
+export function useRequireAuth() {
+  const auth = useAuthInitialized();
+
+  useEffect(() => {
+    if (auth.isReady && !auth.isAuthenticated) {
+      // Auth is ready and user is not authenticated
+      // Components can handle this by showing login UI or redirecting
+      console.warn("Authentication required");
+    }
+  }, [auth.isAuthenticated, auth.isReady]);
+
+  return {
+    ...auth,
+    // Helper flags for protected components
+    needsAuth: auth.isReady && !auth.isAuthenticated,
+    isProtectedReady: auth.isReady && auth.isAuthenticated,
   };
 }

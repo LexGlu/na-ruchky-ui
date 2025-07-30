@@ -122,11 +122,13 @@ function createApiClient(): KyInstance {
               }
             }
 
-            // Use the centralized error factory
-            throw ApiErrorFactory.createFromResponse(
+            // Create the error using centralized factory
+            const apiError = ApiErrorFactory.createFromResponse(
               errorData,
               error.response.status
             );
+
+            throw apiError;
           }
 
           if (error instanceof TimeoutError) {
@@ -137,10 +139,12 @@ function createApiClient(): KyInstance {
           }
 
           // Network errors
-          throw ApiErrorFactory.createFromResponse(
+          const networkError = ApiErrorFactory.createFromResponse(
             { message: "Network error occurred" },
             0
           );
+
+          throw networkError;
         },
       ],
     },
@@ -151,7 +155,7 @@ function createApiClient(): KyInstance {
 const apiClient = createApiClient();
 
 /**
- * Enhanced API client with centralized error handling
+ * Enhanced API client with centralized error handling and Redux integration
  */
 export const api = {
   async request<T>(url: string, options?: Options): Promise<T> {

@@ -6,15 +6,24 @@ import Image from "next/image";
 
 import { motion, AnimatePresence } from "motion/react";
 
-import { useAuth } from "@/store/auth-store";
-import { authService } from "@/lib/api/auth";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  loginUser,
+  googleLoginUser,
+  registerUser,
+  setAuthModalOpen,
+  clearError,
+} from "@/store/auth/auth.slice";
+import {
+  selectAuthModalOpen,
+  selectAuthLoading,
+  selectAuthError,
+} from "@/store/auth/auth.selectors";
 
 import GoogleAuthButton from "@/components/auth/google-auth-btn";
 
 import { FormField } from "@/components/ui/form-fields";
 import { PuffLoader } from "react-spinners";
-
-import { FetchError, ApiError } from "@/lib/types/errors";
 
 import cross from "@/public/cross.svg";
 import AuthFeedback from "@/components/ui/auth-feedback";
@@ -39,14 +48,17 @@ interface Message {
 }
 
 export default function AuthModal() {
-  const { login, googleLogin, isAuthModalOpen, setAuthModalOpen } = useAuth();
+  const dispatch = useAppDispatch();
+  const isAuthModalOpen = useAppSelector(selectAuthModalOpen);
+  const loading = useAppSelector(selectAuthLoading);
+  const error = useAppSelector(selectAuthError);
 
   const onClose = useCallback(() => {
-    // Close the modal
-    setAuthModalOpen(false);
+    dispatch(setAuthModalOpen(false));
+    dispatch(clearError());
     setLoginMessage(null);
     setRegisterMessage(null);
-  }, [setAuthModalOpen]);
+  }, [dispatch]);
 
   // Tabs
   const [activeTab, setActiveTab] = useState<TabType>("login");
@@ -63,16 +75,36 @@ export default function AuthModal() {
     lastName: "",
   });
 
-  // Messages
+  // Local messages (for tab-specific feedback)
   const [loginMessage, setLoginMessage] = useState<Message | null>(null);
   const [registerMessage, setRegisterMessage] = useState<Message | null>(null);
 
-  // Loading
+  // Loading states for different operations
   const [isLoading, setIsLoading] = useState({
     login: false,
     register: false,
     google: false,
   });
+
+  // Update local loading state based on Redux loading
+  useEffect(() => {
+    setIsLoading((prev) => ({
+      ...prev,
+      login: loading && activeTab === "login",
+      register: loading && activeTab === "register",
+    }));
+  }, [loading, activeTab]);
+
+  // Handle Redux errors
+  useEffect(() => {
+    if (error) {
+      if (activeTab === "login") {
+        setLoginMessage({ type: "error", text: error });
+      } else {
+        setRegisterMessage({ type: "error", text: error });
+      }
+    }
+  }, [error, activeTab]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -114,11 +146,15 @@ export default function AuthModal() {
   );
 
   // Switch tabs
-  const handleTabSwitch = useCallback((tab: TabType) => {
-    setActiveTab(tab);
-    setLoginMessage(null);
-    setRegisterMessage(null);
-  }, []);
+  const handleTabSwitch = useCallback(
+    (tab: TabType) => {
+      setActiveTab(tab);
+      dispatch(clearError());
+      setLoginMessage(null);
+      setRegisterMessage(null);
+    },
+    [dispatch]
+  );
 
   // Consolidated change handler
   const handleInputChange = useCallback(
@@ -149,71 +185,66 @@ export default function AuthModal() {
   // Handle form submits depending on tab
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (activeTab === "login") {
       setLoginMessage(null);
-      setIsLoading((prev) => ({ ...prev, login: true }));
+      dispatch(clearError());
+
       try {
-        await login(loginData.email, loginData.password);
-        onClose();
+        await dispatch(
+          loginUser({
+            email: loginData.email,
+            password: loginData.password,
+          })
+        ).unwrap();
+        // Modal will close automatically via Redux state
       } catch (err) {
-        const error = err as FetchError;
-        if (
-          error.info &&
-          typeof error.info === "object" &&
-          "message" in error.info
-        ) {
-          setLoginMessage({
-            type: "error",
-            text: (error.info as ApiError).message,
-          });
-        } else {
-          setLoginMessage({
-            type: "error",
-            text: error.message || "An unexpected error occurred during login.",
-          });
-        }
-      } finally {
-        setIsLoading((prev) => ({ ...prev, login: false }));
+        // Error is handled by useEffect above
+        console.error("Login error:", err);
       }
     } else {
       setRegisterMessage(null);
-      setIsLoading((prev) => ({ ...prev, register: true }));
+      dispatch(clearError());
+
       try {
-        await authService.registerUser({
-          email: registerData.email,
-          password: registerData.password,
-          firstName: registerData.firstName,
-          lastName: registerData.lastName,
-        });
+        await dispatch(
+          registerUser({
+            email: registerData.email,
+            password: registerData.password,
+            firstName: registerData.firstName,
+            lastName: registerData.lastName,
+          })
+        ).unwrap();
+
         setActiveTab("login");
         setLoginMessage({
           type: "success",
           text: "Реєстрація успішна! Будь ласка, перевірте свій email для підтвердження.",
         });
       } catch (err) {
-        const error = err as FetchError;
-        if (
-          error.info &&
-          typeof error.info === "object" &&
-          "message" in error.info
-        ) {
-          setRegisterMessage({
-            type: "error",
-            text: (error.info as ApiError).message,
-          });
-        } else {
-          setRegisterMessage({
-            type: "error",
-            text:
-              error.message ||
-              "An unexpected error occurred during registration.",
-          });
-        }
-      } finally {
-        setIsLoading((prev) => ({ ...prev, register: false }));
+        console.error("Registration error:", err);
       }
     }
   };
+
+  // Handle Google login through Redux
+  const handleGoogleLogin = useCallback(
+    async (token: string) => {
+      setIsLoading((prev) => ({ ...prev, google: true }));
+
+      try {
+        await dispatch(googleLoginUser(token)).unwrap();
+        handleGoogleLoginSuccess();
+      } catch (err) {
+        const errorMessage =
+          typeof err === "string" ? err : "Google login failed";
+        handleGoogleLoginError(errorMessage);
+      } finally {
+        setIsLoading((prev) => ({ ...prev, google: false }));
+      }
+    },
+    [dispatch, handleGoogleLoginSuccess, handleGoogleLoginError]
+  );
 
   const formConfigs = {
     login: {
@@ -308,14 +339,16 @@ export default function AuthModal() {
             animate="visible"
             exit="hidden"
             variants={overlayVariants}
-            transition={{ duration: 0.3 }}>
+            transition={{ duration: 0.3 }}
+          >
             <motion.div
               className="relative w-full max-w-md"
               initial="hidden"
               animate="visible"
               exit="exit"
               variants={modalVariants}
-              transition={{ duration: 0.3 }}>
+              transition={{ duration: 0.3 }}
+            >
               {/* Tab Headers & Close Button */}
               <div className="flex gap-2">
                 <div className="flex">
@@ -323,7 +356,8 @@ export default function AuthModal() {
                     <button
                       onClick={onClose}
                       className="flex items-center justify-center p-3 bg-white rounded-full cursor-pointer"
-                      aria-label="Close modal">
+                      aria-label="Close modal"
+                    >
                       <Image src={cross} alt="Close" />
                     </button>
                   </div>
@@ -336,7 +370,8 @@ export default function AuthModal() {
                       onClick={() => handleTabSwitch("login")}
                       className={`auth-tab px-4 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                         activeTab === "login" ? "opacity-100" : "opacity-80"
-                      }`}>
+                      }`}
+                    >
                       Авторизація
                     </button>
                   </div>
@@ -346,7 +381,8 @@ export default function AuthModal() {
                       onClick={() => handleTabSwitch("register")}
                       className={`auth-tab px-6 py-2 text-xl text-black leading-5 rounded-t-2xl bg-white cursor-pointer ${
                         activeTab === "register" ? "opacity-100" : "opacity-80"
-                      }`}>
+                      }`}
+                    >
                       Реєстрація
                     </button>
                   </div>
@@ -389,7 +425,8 @@ export default function AuthModal() {
                   <button
                     type="submit"
                     disabled={formConfigs[activeTab].isLoading}
-                    className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-[10px] px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer">
+                    className="mt-4 w-full bg-[#CAF97C] hover:bg-lime-400 text-black text-sm py-[10px] px-4 rounded-2xl flex items-center justify-center disabled:opacity-50 cursor-pointer"
+                  >
                     {formConfigs[activeTab].isLoading ? (
                       <div className="flex gap-2 items-center">
                         <PuffLoader size={20} />
@@ -416,7 +453,7 @@ export default function AuthModal() {
                       setIsLoading={(loading) =>
                         setIsLoading((prev) => ({ ...prev, google: loading }))
                       }
-                      googleLogin={googleLogin}
+                      googleLogin={handleGoogleLogin}
                     />
                   </div>
                 </form>

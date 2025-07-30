@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
-import { Providers } from "@/components/providers";
+import { ReduxProvider } from "@/components/providers/redux-provider";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { geologica } from "@/components/ui/fonts";
@@ -97,13 +97,13 @@ export default async function RootLayout({
       >
         <ErrorBoundary>
           <NextIntlClientProvider messages={messages}>
-            <Providers>
+            <ReduxProvider>
               <Header />
               <main className="min-h-screen">{children}</main>
               <Footer />
               <AuthModal />
               <LogOutModal />
-            </Providers>
+            </ReduxProvider>
           </NextIntlClientProvider>
         </ErrorBoundary>
       </body>
