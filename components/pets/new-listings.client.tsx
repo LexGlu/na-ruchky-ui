@@ -8,9 +8,17 @@ import { PetListing } from "@/lib/types/pets";
 
 interface NewListingsClientProps {
   pets: PetListing[];
+  hideArrows?: boolean;
+  limitDesktop?: number; // number of cards to show on md+ screens
+  className?: string;
 }
 
-export function NewListingsClient({ pets }: NewListingsClientProps) {
+export function NewListingsClient({
+  pets,
+  hideArrows = false,
+  limitDesktop,
+  className = "",
+}: NewListingsClientProps) {
   const t = useTranslations("NewListings");
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -78,67 +86,52 @@ export function NewListingsClient({ pets }: NewListingsClientProps) {
   }
 
   return (
-    <div className="relative group">
-      {/* Left Arrow */}
-      {showLeftArrow && (
+    <div className={`relative group ${className}`}>
+      {/* Arrows (hidden if hideArrows) */}
+      {!hideArrows && showLeftArrow && (
         <button
           onClick={() => scroll("left")}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 
-                     bg-white/95 backdrop-blur-sm rounded-full p-3 shadow-lg border border-gray-200
-                     hover:bg-white hover:shadow-xl transition-all duration-200
-                     opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-3 shadow-lg border border-gray-200 hover:bg-white hover:shadow-xl transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
           aria-label={t("scrollLeft")}
         >
           <ArrowLeft size={20} className="text-gray-700" />
         </button>
       )}
-
-      {/* Right Arrow */}
-      {showRightArrow && (
+      {!hideArrows && showRightArrow && (
         <button
           onClick={() => scroll("right")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 
-                     bg-white/95 backdrop-blur-sm rounded-full p-3 shadow-lg border border-gray-200
-                     hover:bg-white hover:shadow-xl transition-all duration-200 
-                     opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-full p-3 shadow-lg border border-gray-200 hover:bg-white hover:shadow-xl transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100"
           aria-label={t("scrollRight")}
         >
           <ArrowRight size={20} className="text-gray-700" />
         </button>
       )}
 
-      {/* Scrollable Container */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
+        className="flex gap-2 md:gap-2 overflow-x-auto md:overflow-visible scrollbar-hide pb-2"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {pets.map((pet, index) => (
-          <div
-            key={pet.id}
-            className="flex-none snap-start"
-            style={{
-              animationDelay: `${index * 100}ms`,
-            }}
-          >
-            <NewPetCard pet={pet} />
-          </div>
-        ))}
+        {pets.map((pet, index) => {
+          const hideOnDesktop =
+            typeof limitDesktop === "number" && index >= limitDesktop;
+          return (
+            <div
+              key={pet.id}
+              className={`flex-none ${hideOnDesktop ? "hidden md:block" : ""}`}
+            >
+              <NewPetCard pet={pet} />
+            </div>
+          );
+        })}
       </div>
 
-      {/* Gradient Overlays for Visual Cues */}
-      {showLeftArrow && (
+      {!hideArrows && showLeftArrow && (
         <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
       )}
-      {showRightArrow && (
+      {!hideArrows && showRightArrow && (
         <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
       )}
-
-      {/* Bottom fade for scrollbar area */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-white to-transparent pointer-events-none" />
     </div>
   );
 }

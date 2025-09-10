@@ -6,6 +6,7 @@ import { CachedPetsData } from "@/lib/cache/pets.cache";
 interface PetsListingsSectionProps {
   staticData: CachedPetsData;
   className?: string;
+  id?: string; // for anchor navigation
 }
 
 /**
@@ -15,9 +16,11 @@ interface PetsListingsSectionProps {
 export default async function PetsListingsSection({
   staticData,
   className = "",
+  id,
 }: PetsListingsSectionProps) {
   return (
     <div
+      id={id}
       className={`flex flex-col w-full py-8 px-4 md:px-6 bg-white rounded-[20px] shadow-sm ${className}`}
       role="region"
       aria-label="Pet listings"

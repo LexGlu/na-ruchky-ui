@@ -9,8 +9,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        // Minimal custom colors actually in use
+        brand: {
+          lime: "#CCF28C",
+          black: "#000000",
+        },
+      },
+      maxWidth: {
+        site: "1440px",
+        content: "1336px",
       },
     },
   },
