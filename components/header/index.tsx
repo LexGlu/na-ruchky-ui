@@ -43,7 +43,7 @@ export default function Header() {
 
       if (heroSectionRef.current) {
         const { bottom } = heroSectionRef.current.getBoundingClientRect();
-        setIsAlternateDesign(bottom < 86);
+        setIsAlternateDesign(bottom < 100);
       } else {
         setIsAlternateDesign(false);
       }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PetListing } from "@/lib/types/pets";
 import formatAge from "@/lib/utils/format-age";
 import { formatPrice } from "@/lib/utils/format-price";
@@ -11,7 +12,6 @@ import { getImageUrl } from "@/lib/utils/get-image-url";
 import petPlaceholder from "@/public/pet_placeholder.png";
 import telegramIcon from "@/public/icons/telegram.svg";
 import whatsapp from "@/public/icons/whatsapp.svg";
-import petCardLoader from "@/public/icons/pet-card-loader.svg";
 
 interface PetDetailProps {
   listing: PetListing;
@@ -20,6 +20,10 @@ interface PetDetailProps {
 export default function PetDetail({ listing }: PetDetailProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
   const { pet, title, price } = listing;
   const {
     name,
@@ -32,14 +36,13 @@ export default function PetDetail({ listing }: PetDetailProps) {
     images = [],
   } = pet;
 
-  // Find profile image or default to first image
-  const profileImageId = profile_picture;
-  const profileImage = images.find((img) => img.id === profileImageId);
+  // Minimum swipe distance (in px) to trigger navigation
+  const MIN_SWIPE_DISTANCE = 50;
 
   // Arrange images with profile image first, then the rest
   const arrangedImages = [...images].sort((a, b) => {
-    if (a.id === profileImageId) return -1;
-    if (b.id === profileImageId) return 1;
+    if (a.id === profile_picture) return -1;
+    if (b.id === profile_picture) return 1;
     return a.order - b.order;
   });
 
@@ -47,9 +50,55 @@ export default function PetDetail({ listing }: PetDetailProps) {
   const currentImage = arrangedImages[currentImageIndex] || null;
   const imageUrl = currentImage
     ? getImageUrl(currentImage.image)
-    : profileImage
-    ? getImageUrl(profileImage.image)
     : petPlaceholder.src;
+
+  // Navigation handlers
+  const goToPrevious = () => {
+    setImageLoaded(false);
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? arrangedImages.length - 1 : prev - 1
+    );
+  };
+
+  const goToNext = () => {
+    setImageLoaded(false);
+    setCurrentImageIndex((prev) =>
+      prev === arrangedImages.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const goToImage = (index: number) => {
+    setImageLoaded(false);
+    setCurrentImageIndex(index);
+  };
+
+  // Touch handlers for swipe gesture
+  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > MIN_SWIPE_DISTANCE;
+    const isRightSwipe = distance < -MIN_SWIPE_DISTANCE;
+
+    if (isLeftSwipe) {
+      goToNext();
+    } else if (isRightSwipe) {
+      goToPrevious();
+    }
+
+    // Reset touch state
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
 
   return (
     <div className="w-full mx-auto text-black flex flex-col gap-1">
@@ -81,61 +130,106 @@ export default function PetDetail({ listing }: PetDetailProps) {
           </div>
         </div>
 
-        {/* Image and Tags Section */}
+        {/* Image Gallery Section */}
         <div className="col-span-1 md:col-span-2 flex flex-col md:flex-row gap-6 md:gap-10 order-1 md:order-2">
-          <div className="w-full md:w-auto flex flex-col justify-center gap-3">
-            <div className="relative w-full max-w-md md:w-[404px] aspect-[2/3] rounded-3xl overflow-hidden">
-              {/* Skeleton Loader */}
-              {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-3xl z-10">
-                  <div className="h-full w-full flex items-center justify-center">
-                    <Image
-                      src={petCardLoader}
-                      alt="Loading..."
-                      width={100}
-                      height={100}
-                    />
-                  </div>
-                </div>
+          <div className="w-full md:w-auto flex flex-col justify-center gap-6">
+            {/* Stacked Images Container */}
+            <div className="relative w-full max-w-md md:w-[404px] mx-auto pb-4">
+              {/* Background stacked images effect - show actual next images */}
+              {arrangedImages.length > 1 && (
+                <>
+                  {/* Third layer */}
+                  {arrangedImages[
+                    (currentImageIndex + 2) % arrangedImages.length
+                  ] && (
+                    <div className="absolute left-5 right-5 top-4 -bottom-1 rounded-3xl overflow-hidden bg-black/50"></div>
+                  )}
+
+                  {/* Second layer  */}
+                  {arrangedImages[
+                    (currentImageIndex + 1) % arrangedImages.length
+                  ] && (
+                    <div className="absolute left-2.5 right-2.5 top-4 bottom-1 rounded-3xl overflow-hidden bg-black/75"></div>
+                  )}
+                </>
               )}
 
-              {/* Pet Image */}
-              <Image
-                src={imageUrl}
-                alt={currentImage?.caption || name}
-                fill
-                sizes="(max-width: 768px) 100vw, 404px"
-                className="object-cover"
-                priority
-                onLoad={() => setImageLoaded(true)}
-                style={{ opacity: imageLoaded ? 1 : 0 }}
-              />
+              {/* Main image container */}
+              <div
+                ref={imageContainerRef}
+                className="relative w-full aspect-[2/3] rounded-3xl overflow-hidden group z-10 touch-pan-y select-none"
+                onTouchStart={
+                  arrangedImages.length > 1 ? onTouchStart : undefined
+                }
+                onTouchMove={
+                  arrangedImages.length > 1 ? onTouchMove : undefined
+                }
+                onTouchEnd={arrangedImages.length > 1 ? onTouchEnd : undefined}
+              >
+                {/* Skeleton Loader */}
+                {!imageLoaded && (
+                  <div className="absolute inset-0 bg-gray-200 rounded-3xl z-10 flex items-center justify-center text-green-500">
+                    <div className="w-12 h-12 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                  </div>
+                )}
+
+                {/* Pet Image */}
+                <Image
+                  src={imageUrl}
+                  alt={currentImage?.caption || name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 404px"
+                  className="object-cover transition-opacity duration-300"
+                  priority
+                  onLoad={() => setImageLoaded(true)}
+                  style={{ opacity: imageLoaded ? 1 : 0 }}
+                />
+
+                {/* Navigation Arrows - Only show if multiple images */}
+                {arrangedImages.length > 1 && (
+                  <>
+                    {/* Left Arrow */}
+                    <button
+                      onClick={goToPrevious}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-xl cursor-pointer active:scale-95"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft
+                        className="w-4 h-4 text-gray-800"
+                        strokeWidth={2.5}
+                      />
+                    </button>
+
+                    {/* Right Arrow */}
+                    <button
+                      onClick={goToNext}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-xl cursor-pointer active:scale-95"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight
+                        className="w-4 h-4 text-gray-800"
+                        strokeWidth={2.5}
+                      />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Image Thumbnails */}
+            {/* Pagination Dots - Below the image */}
             {arrangedImages.length > 1 && (
-              <div className="flex justify-center gap-2 overflow-x-auto py-2">
-                {arrangedImages.map((img, index) => (
+              <div className="flex justify-center gap-2">
+                {arrangedImages.map((_, index) => (
                   <button
-                    key={img.id}
-                    onClick={() => {
-                      setCurrentImageIndex(index);
-                      setImageLoaded(false);
-                    }}
-                    className={`relative h-16 w-16 rounded-md overflow-hidden border-2 cursor-pointer ${
+                    key={index}
+                    onClick={() => goToImage(index)}
+                    className={`transition-all duration-200 rounded-full cursor-pointer ${
                       index === currentImageIndex
-                        ? "border-[#ABE34D]"
-                        : "border-transparent"
+                        ? "w-3 h-3 bg-black"
+                        : "w-3 h-3 bg-white border-1 border-black hover:bg-gray-200"
                     }`}
-                  >
-                    <Image
-                      src={getImageUrl(img.image)}
-                      alt={img.caption || `${name} photo ${index + 1}`}
-                      fill
-                      sizes="64px"
-                      className="object-cover"
-                    />
-                  </button>
+                    aria-label={`Go to image ${index + 1}`}
+                  />
                 ))}
               </div>
             )}
@@ -192,7 +286,7 @@ export default function PetDetail({ listing }: PetDetailProps) {
           </h3>
           <Link
             href="/checkout"
-            className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 text-sm text-black bg-[#ABE34D] rounded-2xl px-[26px] py-[10px]"
+            className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 text-sm text-black bg-[#ABE34D] rounded-2xl px-[26px] py-[10px] hover:bg-[#9fd340] transition-colors"
           >
             Взяти &quot;На ручки&quot;
           </Link>

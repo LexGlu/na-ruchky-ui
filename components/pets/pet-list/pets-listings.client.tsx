@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
 import PetsFilter from "@/components/pets/pet-filter";
 import PetList from "@/components/pets/pet-list";
 import ErrorMessage from "@/components/ui/error-message";
@@ -150,7 +149,6 @@ export function PetsListingsClient({
   itemsPerPage = 12,
   enableApiFiltering = true,
 }: PetsListingsClientProps) {
-  const t = useTranslations("PetListings");
   const searchParams = useSearchParams();
 
   // ============================================================================
@@ -286,12 +284,8 @@ export function PetsListingsClient({
         <PetsFilter />
       </div>
 
-      {/* Results Summary */}
-      <div className="flex items-center justify-end mb-4 pb-4 border-b border-gray-200">
-        <div className="text-xs text-gray-400">
-          {t("updated")} {new Date(staticData.lastUpdated).toLocaleTimeString()}
-        </div>
-      </div>
+      {/* Divider */}
+      <div className="mb-4 pb-4 border-b border-gray-200"></div>
 
       {/* Content */}
       {apiError ? (
