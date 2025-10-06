@@ -4,10 +4,10 @@ import { memo } from "react";
 import { PetType } from "@/lib/types/pets";
 
 // Labels mapping
-const LABELS: Record<PetType, string> = {
-  all: "Усі працівники",
-  cats: "Коти",
-  dogs: "Собаки",
+const LABELS: Record<PetType, { full: string; short: string }> = {
+  all: { full: "Усі", short: "Усі" },
+  cats: { full: "Коти", short: "Коти" },
+  dogs: { full: "Собаки", short: "Собаки" },
 };
 
 interface PetTypeTabProps {
@@ -21,16 +21,21 @@ const PetTypeTab = memo(function PetTypeTab({
   activeType,
   onSelect,
 }: PetTypeTabProps) {
+  const isFullLabel = typeof window !== "undefined" && window.innerWidth >= 640;
+
   return (
     <button
       onClick={() => onSelect(type)}
-      className={`w-1/3 text-center rounded-lg py-3 px-4 border border-black transition-colors cursor-pointer ${
+      className={`flex-1 text-center rounded-lg py-2 sm:py-3 px-2 sm:px-4 border border-black transition-colors cursor-pointer text-sm sm:text-base md:text-lg ${
         activeType === type
           ? "bg-black text-white"
           : "bg-white text-black hover:bg-gray-50"
       }`}
-      aria-pressed={activeType === type}>
-      <span className="sm:text-lg">{LABELS[type]}</span>
+      aria-pressed={activeType === type}
+    >
+      <span className="truncate">
+        {isFullLabel ? LABELS[type].full : LABELS[type].short}
+      </span>
     </button>
   );
 });

@@ -29,28 +29,18 @@ export default async function HeroSection() {
       max="site"
       // Using direct arbitrary color to avoid any Tailwind config ambiguity
       className="bg-[#CCF28C] rounded-b-[17px] relative text-black"
-      innerClassName="flex flex-col gap-0 sm:gap-[100px]"
+      innerClassName="flex flex-col gap-[42px] sm:gap-[100px]"
     >
-      <h1 className="w-full sm:w-2/3 text-4xl sm:text-[96px]/[82px] font-bold text-left font-geologica">
+      <h1 className="w-full sm:w-2/3 text-[48px]/[46px] sm:text-[96px]/[82px] font-bold text-left font-geologica">
         <SplitLines text={t("title") as string} />
       </h1>
-      <div className="relative mt-6">
+      <div className="relative sm:mt-6">
         <div className="hidden sm:block absolute -top-[346px] right-10 lg:right-20 xl:right-24 z-10 pointer-events-none">
           <Image
             src={heroDogMascot}
             alt="Dog mascot with speech bubble"
             width={404}
             height={386.7}
-            className="object-contain"
-            priority
-          />
-        </div>
-        <div className="sm:hidden absolute -top-[131px] -right-3 z-10 pointer-events-none">
-          <Image
-            src={heroDogMascot}
-            alt="Dog mascot with speech bubble"
-            width={180}
-            height={120}
             className="object-contain"
             priority
           />

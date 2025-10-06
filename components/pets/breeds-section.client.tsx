@@ -99,7 +99,7 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
           </h2>
         </div>
         <div className="flex flex-col gap-6 lg:gap-8 lg:max-w-[664px] lg:pt-2 flex-grow">
-          <p className="font-geologica text-sm sm:text-base md:text-lg leading-relaxed text-black/80">
+          <p className="text-[20px]/[28px] sm:text-base md:text-lg text-black/80 pr-2">
             {t("description")}
           </p>
           <div className="flex flex-row justify-between items-center gap-[6px]">

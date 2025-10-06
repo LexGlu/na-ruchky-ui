@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Squash as Hamburger } from "hamburger-react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import HeaderLogo from "@/components/header/logo";
 import DesktopNav from "@/components/header/desktop-nav";
@@ -12,6 +13,8 @@ import MobileNav from "@/components/header/mobile-nav";
 import HeaderActions from "@/components/header/actions";
 
 import { navLinks } from "@/components/header/data";
+
+import paw from "@/public/paw-dark.svg";
 
 /**
  * The main Header component used in layout.tsx
@@ -24,7 +27,7 @@ export default function Header() {
   const [isAlternateDesign, setIsAlternateDesign] = useState(!isHomePage);
   const heroSectionRef = useRef<HTMLDivElement | null>(null);
 
-  const toggleMobileNav = () => setIsMobileOpen((prev) => !prev);
+  const t = useTranslations("Header.actions");
   const closeMobileNav = () => setIsMobileOpen(false);
 
   useEffect(() => {
@@ -70,8 +73,6 @@ export default function Header() {
     ? "bg-[#CCF28C] text-black hover:opacity-90" // Lime button on white header
     : "bg-white text-black hover:bg-gray-100"; // White button on lime header
 
-  const hamburgerColor = isAlternateDesign ? "#000000" : "#4A5568"; // Dark gray for lime bg
-
   const addAnnouncementLinkForMobile = (
     <Link
       href="/add-listing"
@@ -105,14 +106,12 @@ export default function Header() {
             </div>
           </DesktopNav>
 
-          <div className="md:hidden">
-            <Hamburger
-              toggled={isMobileOpen}
-              toggle={toggleMobileNav}
-              size={20}
-              color={hamburgerColor}
-            />
-          </div>
+          <button
+            type="button"
+            className="flex md:hidden bg-black text-white hover:opacity-95 py-[10px] px-[11px] justify-center items-center rounded-full cursor-pointer"
+          >
+            <Image src={paw} alt={t("pawIcon")} className="-rotate-18" />
+          </button>
         </div>
       </div>
 

@@ -30,24 +30,24 @@ function PetsFilter() {
   } = usePetsFilter();
 
   return (
-    <div className="flex flex-col text-black py-8 gap-8">
+    <div className="flex flex-col text-black py-8 gap-8 px-4 md:px-0">
       <div className="flex flex-col md:flex-row gap-8 justify-between items-center">
-        <div className="md:w-1/3">
+        <div className="w-full md:w-1/3">
           <h2
-            className="text-4xl md:text-8xl/[82px] font-semibold"
+            className="text-2xl sm:text-3xl md:text-8xl/[82px] font-semibold break-words hyphens-auto"
             id="pets-heading"
           >
             Готові стати другом
           </h2>
         </div>
-        <div className="md:w-1/2 flex flex-col gap-6 pt-5">
-          <p className="text-lg md:text-xl">
+        <div className="w-full md:w-1/2 flex flex-col gap-6 pt-5">
+          <p className="text-base sm:text-lg md:text-xl leading-relaxed">
             У кожного вихованця свій характер, особливості та життєва історія.
             Створити найкращі умови для життя тварин.
           </p>
 
           <div
-            className="flex gap-2 w-full"
+            className="flex gap-1 sm:gap-2 w-full"
             role="tablist"
             aria-labelledby="pets-heading"
           >
@@ -70,9 +70,9 @@ function PetsFilter() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4">
+      <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between pt-4 gap-4">
         <div
-          className="w-full md:w-2/3 flex flex-wrap items-center gap-2"
+          className="hidden md:flex md:w-2/3 flex-wrap items-center gap-1 sm:gap-2"
           role="group"
           aria-label="Filter options"
         >
@@ -91,7 +91,7 @@ function PetsFilter() {
           {hasFilters && (
             <button
               onClick={handleClearAllFilters}
-              className="ml-2 text-sm text-black hover:underline cursor-pointer"
+              className="ml-1 sm:ml-2 text-xs sm:text-sm text-black hover:underline cursor-pointer whitespace-nowrap"
               aria-label="Очистити всі фільтри"
             >
               Очистити фільтри
@@ -99,7 +99,7 @@ function PetsFilter() {
           )}
         </div>
 
-        <div className="w-full md:w-1/3 flex flex-row justify-end items-center mt-4 md:mt-0 gap-6 transform -rotate-[0.03deg]">
+        <div className="hidden md:flex md:w-1/3 flex-col sm:flex-row justify-start md:justify-end items-start sm:items-center mt-4 md:mt-0 gap-3 sm:gap-6">
           <BaseToggle
             isActive={currentIsHypoallergenic}
             onToggle={handleHypoallergenicChange}
