@@ -30,9 +30,9 @@ const styles = {
     "text-white text-lg text-[24px] font-medium sm:text-2xl md:text-[32px] md:leading-[1.05] max-w-[520px]",
   title: "font-geologica font-semibold text-white text-[40px] relative",
   ctaContainer:
-    "absolute w-full pl-8 sm:w-auto bottom-4 right-4 sm:bottom-6 sm:right-8 md:bottom-8 md:right-10 flex flex-col items-end",
+    "absolute w-full pl-8 sm:w-auto bottom-4 right-4 sm:bottom-6 sm:right-8 md:bottom-8 md:right-9 flex flex-col items-end",
   ctaButton:
-    "inline-flex items-center justify-center h-[56px] px-8 rounded-md bg-[#CCF28C] text-black text-sm md:text-base font-medium shadow-sm hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition w-full md:w-auto min-w-[230px]",
+    "inline-flex items-center justify-center md:w-[225px] h-[50px] py-3 px-6 rounded-md bg-[#CCF28C] text-black text-sm md:text-base font-medium shadow-sm hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black transition w-full",
 } as const;
 
 // Sub-components

@@ -77,7 +77,7 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
     return (
       <button
         onClick={() => handleFilterClick(filterSpecies as Species)}
-        className={`px-5 py-3 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-opacity-75 min-w-[150px] sm:min-w-[180px] md:min-w-[200px] border cursor-pointer
+        className={`w-full px-5 py-3 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-opacity-75 min-w-[150px] sm:min-w-[180px] md:min-w-[200px] border cursor-pointer
                     ${
                       isActive
                         ? "bg-black text-white border-black shadow-md"
@@ -102,7 +102,7 @@ export function BreedsClient({ allBreeds, speciesCounts }: BreedsClientProps) {
           <p className="font-geologica text-sm sm:text-base md:text-lg leading-relaxed text-black/80">
             {t("description")}
           </p>
-          <div className="flex flex-row justify-start items-center gap-3 sm:gap-4">
+          <div className="flex flex-row justify-between items-center gap-[6px]">
             {getFilterButtonStyle("dog", speciesCounts.dog)}
             {getFilterButtonStyle("cat", speciesCounts.cat)}
           </div>

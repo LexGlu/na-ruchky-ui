@@ -12,8 +12,7 @@ export function PetsListingsLoading() {
       </div>
 
       {/* Results Summary Loading */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-        <div className="h-4 bg-gray-200 rounded w-48"></div>
+      <div className="flex items-center justify-end mb-4 pb-4 border-b border-gray-200">
         <div className="h-3 bg-gray-200 rounded w-32"></div>
       </div>
 

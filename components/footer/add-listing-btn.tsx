@@ -10,7 +10,7 @@ export default function FooterAddListingButton() {
     <div className="flex justify-end self-start w-full sm:w-auto">
       <Link
         href="/add-ad"
-        className="w-full sm:w-auto text-center inline-block bg-black text-white text-nowrap py-2 px-5 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
+        className="w-full text-center inline-block bg-black text-white text-nowrap sm:w-[225px] h-[50px] py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
         aria-label={t("addListingAria")}
       >
         {t("addListing")}

@@ -57,25 +57,27 @@ export default function PetDetail({ listing }: PetDetailProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 p-4 sm:p-6 md:p-10 gap-6 md:gap-10 bg-white rounded-[20px]">
         {/* Pet Info Section */}
         <div className="flex flex-col gap-4 order-2 md:order-1">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-4xl sm:text-5xl md:text-[72px] font-light leading-tight">
-              {name}
-            </h1>
-            <div className="flex flex-wrap gap-2 md:gap-4 text-lg sm:text-xl md:text-2xl font-medium">
-              <span className="text-black">{location || "Невідомо"}</span>
-              <span className="text-[#7D7D83]">
-                {formatAge(birth_date ?? null)}
+          <div className="flex flex-col gap-[40px]">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-4xl sm:text-5xl md:text-[72px] font-light leading-tight">
+                {name}
+              </h1>
+              <div className="flex flex-wrap gap-2 md:gap-4 text-lg sm:text-xl md:text-2xl font-medium">
+                <span className="text-black">{location || "Невідомо"}</span>
+                <span className="text-[#7D7D83]">
+                  {formatAge(birth_date ?? null)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-[12px]">
+              <span className="text-xl sm:text-2xl font-medium text-black">
+                {title}
+              </span>
+              <span className="text-base md:text-lg font-light">
+                {description || "Це чудо чекає саме тебе!"}
               </span>
             </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className="text-xl sm:text-2xl font-medium text-black">
-              {title}
-            </span>
-            <span className="text-base md:text-lg font-light">
-              {description || "Це чудо чекає саме тебе!"}
-            </span>
           </div>
         </div>
 
@@ -124,7 +126,8 @@ export default function PetDetail({ listing }: PetDetailProps) {
                       index === currentImageIndex
                         ? "border-[#ABE34D]"
                         : "border-transparent"
-                    }`}>
+                    }`}
+                  >
                     <Image
                       src={getImageUrl(img.image)}
                       alt={img.caption || `${name} photo ${index + 1}`}
@@ -143,7 +146,8 @@ export default function PetDetail({ listing }: PetDetailProps) {
               {tags?.map((tag) => (
                 <span
                   key={tag}
-                  className="px-[10px] py-[6px] text-sm md:text-lg font-light text-black border border-black rounded-full text-nowrap">
+                  className="px-[10px] py-[6px] text-sm md:text-lg font-light text-black border border-black rounded-full text-nowrap"
+                >
                   {tag}
                 </span>
               ))}
@@ -188,7 +192,8 @@ export default function PetDetail({ listing }: PetDetailProps) {
           </h3>
           <Link
             href="/checkout"
-            className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 text-sm text-black bg-[#ABE34D] rounded-2xl px-[26px] py-[10px]">
+            className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-2 text-sm text-black bg-[#ABE34D] rounded-2xl px-[26px] py-[10px]"
+          >
             Взяти &quot;На ручки&quot;
           </Link>
         </div>

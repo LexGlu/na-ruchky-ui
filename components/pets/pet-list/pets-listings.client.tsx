@@ -203,9 +203,6 @@ export function PetsListingsClient({
   // DISPLAY LOGIC
   // ============================================================================
 
-  // Determine current pets and counts
-  const totalCount = shouldUseApi ? apiTotalCount : clientFilteredPets.length;
-
   // Paginate client-side filtered pets
   const paginatedClientPets = useMemo(
     () => clientFilteredPets.slice(0, (currentPage + 1) * itemsPerPage),
@@ -290,14 +287,7 @@ export function PetsListingsClient({
       </div>
 
       {/* Results Summary */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-        <div className="text-sm text-gray-600">
-          <span>
-            {t("showing")} {displayedPets.length} {t("of")} {totalCount}{" "}
-            {t("results")}
-          </span>
-        </div>
-
+      <div className="flex items-center justify-end mb-4 pb-4 border-b border-gray-200">
         <div className="text-xs text-gray-400">
           {t("updated")} {new Date(staticData.lastUpdated).toLocaleTimeString()}
         </div>
