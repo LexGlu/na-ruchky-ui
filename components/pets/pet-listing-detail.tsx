@@ -54,7 +54,9 @@ type GalleryAction =
 
 const ANIMATION_CONFIG = {
   DURATION: 450,
+  DESKTOP_DURATION: 150,
   INDEX_UPDATE_DELAY: 150,
+  DESKTOP_INDEX_UPDATE_DELAY: 150,
   MIN_SWIPE_DISTANCE: 50,
 } as const;
 
@@ -87,7 +89,7 @@ function galleryReducer(
   }
 }
 
-function useImageNavigation(imagesLength: number) {
+function useImageNavigation(imagesLength: number, isTouchDevice: boolean) {
   const [state, dispatch] = useReducer(galleryReducer, {
     currentIndex: 0,
     isTransitioning: false,
@@ -112,17 +114,37 @@ function useImageNavigation(imagesLength: number) {
         direction === "left" ? "next" : "prev"
       );
 
-      dispatch({ type: "START_TRANSITION", direction, targetIndex });
+      // Use different animation styles for touch vs desktop
+      const animationDirection = isTouchDevice ? direction : null;
+
+      dispatch({
+        type: "START_TRANSITION",
+        direction: animationDirection,
+        targetIndex,
+      });
+
+      const duration = isTouchDevice
+        ? ANIMATION_CONFIG.DURATION
+        : ANIMATION_CONFIG.DESKTOP_DURATION;
+      const updateDelay = isTouchDevice
+        ? ANIMATION_CONFIG.INDEX_UPDATE_DELAY
+        : ANIMATION_CONFIG.DESKTOP_INDEX_UPDATE_DELAY;
 
       setTimeout(() => {
         dispatch({ type: "UPDATE_INDEX", index: targetIndex });
-      }, ANIMATION_CONFIG.INDEX_UPDATE_DELAY);
+      }, updateDelay);
 
       setTimeout(() => {
         dispatch({ type: "END_TRANSITION" });
-      }, ANIMATION_CONFIG.DURATION);
+      }, duration);
     },
-    [state.isTransitioning, state.currentIndex, imagesLength, getIndex]
+    [
+      state.isTransitioning,
+      state.currentIndex,
+      imagesLength,
+      getIndex,
+      isTouchDevice,
+    ]
   );
 
   const navigateDirect = useCallback(
@@ -135,17 +157,31 @@ function useImageNavigation(imagesLength: number) {
         (state.currentIndex - targetIndex + imagesLength) % imagesLength;
       const direction = forwardDistance <= backwardDistance ? "left" : "right";
 
-      dispatch({ type: "START_TRANSITION", direction, targetIndex });
+      // Use different animation styles for touch vs desktop
+      const animationDirection = isTouchDevice ? direction : null;
+
+      dispatch({
+        type: "START_TRANSITION",
+        direction: animationDirection,
+        targetIndex,
+      });
+
+      const duration = isTouchDevice
+        ? ANIMATION_CONFIG.DURATION
+        : ANIMATION_CONFIG.DESKTOP_DURATION;
+      const updateDelay = isTouchDevice
+        ? ANIMATION_CONFIG.INDEX_UPDATE_DELAY
+        : ANIMATION_CONFIG.DESKTOP_INDEX_UPDATE_DELAY;
 
       setTimeout(() => {
         dispatch({ type: "UPDATE_INDEX", index: targetIndex });
-      }, ANIMATION_CONFIG.INDEX_UPDATE_DELAY);
+      }, updateDelay);
 
       setTimeout(() => {
         dispatch({ type: "END_TRANSITION" });
-      }, ANIMATION_CONFIG.DURATION);
+      }, duration);
     },
-    [state.currentIndex, state.isTransitioning, imagesLength]
+    [state.currentIndex, state.isTransitioning, imagesLength, isTouchDevice]
   );
 
   return {
@@ -161,6 +197,24 @@ function useImageNavigation(imagesLength: number) {
     navigateTo: navigateDirect,
     getIndex,
   };
+}
+
+function useDeviceDetection() {
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const checkTouchSupport = () => {
+      const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+      setIsTouchDevice(hasTouch && isMobile);
+    };
+
+    checkTouchSupport();
+    window.addEventListener("resize", checkTouchSupport);
+    return () => window.removeEventListener("resize", checkTouchSupport);
+  }, []);
+
+  return isTouchDevice;
 }
 
 function useTouchGestures(
@@ -383,6 +437,7 @@ const ImageGallery = memo(
     onNext,
     onNavigateTo,
     touchHandlers,
+    isTouchDevice,
   }: {
     images: PetImage[];
     currentIndex: number;
@@ -396,10 +451,11 @@ const ImageGallery = memo(
     onNext: () => void;
     onNavigateTo: (index: number) => void;
     touchHandlers: TouchHandlers;
+    isTouchDevice: boolean;
   }) => (
     <>
       <div className="relative w-full max-w-md md:w-[404px] mx-auto pb-4 pet-gallery-container">
-        {images.length > 1 && (
+        {images.length > 1 && isTouchDevice && (
           <>
             <div className="pet-gallery-static-overlay absolute left-5 right-5 top-4 -bottom-1 bg-black/50"></div>
             <div className="pet-gallery-static-overlay absolute left-2.5 right-2.5 top-4 bottom-1 bg-black/75"></div>
@@ -407,24 +463,29 @@ const ImageGallery = memo(
         )}
 
         <div
-          className="pet-gallery-deck touch-pan-y select-none"
-          {...(images.length > 1 ? touchHandlers : {})}
+          className={`${
+            isTouchDevice ? "pet-gallery-deck" : "pet-gallery-deck-desktop"
+          } touch-pan-y select-none`}
+          {...(images.length > 1 && isTouchDevice ? touchHandlers : {})}
         >
-          {images.length > 1 && (
+          {/* Only render dual images for touch devices */}
+          {images.length > 1 && isTouchDevice && (
             <div
               className={`pet-gallery-card pet-gallery-card--next ${
                 isTransitioning ? "is-revealed" : ""
               }`}
             >
-              <Image
-                src={imageUrls.underneath}
-                alt={underneathImage?.caption || `${name} - next`}
-                fill
-                sizes="(max-width: 768px) 100vw, 404px"
-                className="object-cover"
-                priority={false}
-                quality={85}
-              />
+              {underneathImage && (
+                <Image
+                  src={imageUrls.underneath}
+                  alt={underneathImage?.caption || `${name} - next`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 404px"
+                  className="object-cover"
+                  priority={false}
+                  quality={85}
+                />
+              )}
               {isTransitioning && (
                 <ImageCounter
                   currentIndex={currentIndex}
@@ -435,26 +496,37 @@ const ImageGallery = memo(
           )}
 
           <div
-            className={`pet-gallery-card pet-gallery-card--current ${
-              isTransitioning && exitDirection === "left"
-                ? "pet-gallery-card--exiting-left"
-                : ""
-            } ${
-              isTransitioning && exitDirection === "right"
-                ? "pet-gallery-card--exiting-right"
-                : ""
+            className={`pet-gallery-card ${
+              isTouchDevice
+                ? `pet-gallery-card--current ${
+                    isTransitioning && exitDirection === "left"
+                      ? "pet-gallery-card--exiting-left"
+                      : ""
+                  } ${
+                    isTransitioning && exitDirection === "right"
+                      ? "pet-gallery-card--exiting-right"
+                      : ""
+                  }`
+                : `pet-gallery-card--desktop-single`
             }`}
           >
             <Image
+              key={isTouchDevice ? undefined : `desktop-image-${currentIndex}`}
               src={imageUrls.current}
               alt={currentImage?.caption || name}
               fill
               sizes="(max-width: 768px) 100vw, 404px"
-              className="object-cover"
+              className={`object-cover ${
+                !isTouchDevice
+                  ? `transition-opacity duration-500 ease-in-out ${
+                      isTransitioning ? "opacity-0" : "opacity-100"
+                    }`
+                  : ""
+              }`}
               priority={true}
               quality={85}
             />
-            {images.length > 1 && !isTransitioning && (
+            {images.length > 1 && (
               <ImageCounter
                 currentIndex={currentIndex}
                 totalImages={images.length}
@@ -579,11 +651,12 @@ export default function PetDetail({ listing }: PetDetailProps) {
     [images, profile_picture]
   );
 
-  const gallery = useImageNavigation(arrangedImages.length);
+  const isTouchDevice = useDeviceDetection();
+  const gallery = useImageNavigation(arrangedImages.length, isTouchDevice);
   const touchHandlers = useTouchGestures(
     gallery.navigateNext,
     gallery.navigatePrev,
-    arrangedImages.length > 1
+    isTouchDevice && arrangedImages.length > 1
   );
 
   useKeyboardNavigation(
@@ -651,6 +724,7 @@ export default function PetDetail({ listing }: PetDetailProps) {
               onNext={gallery.navigateNext}
               onNavigateTo={gallery.navigateTo}
               touchHandlers={touchHandlers}
+              isTouchDevice={isTouchDevice}
             />
           </div>
 
