@@ -280,12 +280,12 @@ export function PetsListingsClient({
   return (
     <>
       {/* Filter Section */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-[14px]">
         <PetsFilter />
       </div>
 
       {/* Divider */}
-      <div className="mb-4 pb-4 border-b border-gray-200"></div>
+      <div className="mb-[20px] border-b-2 border-black"></div>
 
       {/* Content */}
       {apiError ? (

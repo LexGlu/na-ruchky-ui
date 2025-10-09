@@ -30,7 +30,7 @@ function PetsFilter() {
   } = usePetsFilter();
 
   return (
-    <div className="flex flex-col text-black py-8 gap-8 px-4 md:px-0">
+    <div className="flex flex-col text-black pt-8 gap-8 px-4 md:px-0">
       <div className="flex flex-col md:flex-row gap-8 justify-between items-center">
         <div className="w-full md:w-1/3">
           <h2
